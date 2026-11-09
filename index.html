@@ -4732,6 +4732,7 @@ window.location.reload();
 }
 }
 // 🎵 9曲のBGMリスト（一番上の1箇所だけに絞る）
+// 🎵 9曲のBGMリスト（一番上の1箇所だけに絞る）
 let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) || [
     { title: "BGM-1", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-1.mp3" },
     { title: "BGM-2", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-2.mp3" },
@@ -4743,7 +4744,6 @@ let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) ||
     { title: "BGM-8", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-8.mp3" },
     { title: "BGM-9", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-9.mp3" }
 ];
-
 currentBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
 let isBgmUserPaused = false; 
 
@@ -4798,32 +4798,20 @@ window.addEventListener('click', () => {
     }
 });
 
-// 🎵 BGMの再生状態をトグル切り替え（設定画面連動版）
-    function toggleBgmPlayState() {     
-        const audioEl = document.getElementById('bgm-audio');    
-        if (!audioEl) return;     
-        if (audioEl.paused) {         
-            isBgmUserPaused = false;         
-            audioEl.play().catch(e => {});         
-            alert("▶ BGMを再開しました");     
-        } else {        
-            isBgmUserPaused = true;         
-            audioEl.pause();         
-            alert("⏸ BGMを一時停止しました");     
-        } 
-    }  
-
-    // 設定画面の曲名表示を連動させるための拡張
-    if (typeof window.originalUpdateBgmUI === 'undefined' && typeof updateBgmDisplayUI === 'function') {
-        window.originalUpdateBgmUI = updateBgmDisplayUI;
+// 🎵 BGMの再生状態をトグル切り替え
+function toggleBgmPlayState() {
+    const audioEl = document.getElementById('bgm-audio');
+    if (!audioEl) return;
+    if (audioEl.paused) {
+        isBgmUserPaused = false;
+        audioEl.play().catch(e => {});
+        alert("▶ BGMを再開しました");
+    } else {
+        isBgmUserPaused = true;
+        audioEl.pause();
+        alert("⏸ BGMを一時停止しました");
     }
-    if (typeof window.originalUpdateBgmUI === 'function') {
-        updateBgmDisplayUI = function(title) {
-            window.originalUpdateBgmUI(title);
-            const st = document.getElementById('settings-bgm-status');     
-            if (st) st.innerText = `再生中: ${title} (BGM-${currentBgmIndex + 1}/9)`; 
-        };
-    }
+}
 
 // ==========================================
 // 🎵 楽曲リスト & 再生インデックス管理（YouTube）
@@ -4894,37 +4882,12 @@ function playYouTubeSongByIndex(index) {
     }
 }
 
-function playDefaultSongOnLogin() {
-    initDynamicPlaylist();
-    if (currentTargetSongs.length > 0) {
-        currentSongIndex = 0;
-        const miniTitle = document.getElementById('mini-song-title');
-        if (miniTitle) miniTitle.innerText = currentTargetSongs[0].title;
-    }
-}
+setTimeout(initDynamicPlaylist, 500);
 
-setTimeout(initDynamicPlaylist, 500);  
-
-// BGM再生/一時停止切り替え 
-function toggleBgmPlayState() {     
-    const audioEl = document.getElementById('bgm-audio');    
-    if (!audioEl) return;     
-    if (audioEl.paused) {         
-        isBgmUserPaused = false;         
-        audioEl.play().catch(e => {});         
-        alert("▶ BGMを再開しました");     
-    } else {        
-        isBgmUserPaused = true;         
-        audioEl.pause();         
-        alert("⏸ BGMを一時停止しました");     
-    } 
-}  
-
-// 設定画面の曲名表示を連動させるための拡張
+// 設定画面の曲名表示を連動させるための拡張（テンプレートリテラルの修正）
 if (typeof window.originalUpdateBgmUI === 'undefined' && typeof updateBgmDisplayUI === 'function') {
     window.originalUpdateBgmUI = updateBgmDisplayUI;
 }
-
 if (typeof window.originalUpdateBgmUI === 'function') {
     updateBgmDisplayUI = function(title) {
         window.originalUpdateBgmUI(title);
@@ -4932,6 +4895,6 @@ if (typeof window.originalUpdateBgmUI === 'function') {
         if (st) st.innerText = `再生中: ${title} (BGM-${currentBgmIndex + 1}/9)`; 
     };
 }
-</script>;
+</script>
 </body>
 </html>
