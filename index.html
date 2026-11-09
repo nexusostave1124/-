@@ -4909,8 +4909,7 @@ function toggleBgmPlayState() {
         isBgmUserPaused = false;         
         audioEl.play().catch(e => {});         
         alert("▶ BGMを再開しました");     
-    } 
-    else {        
+    } else {        
         isBgmUserPaused = true;         
         audioEl.pause();         
         alert("⏸ BGMを一時停止しました");     
