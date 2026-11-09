@@ -719,7 +719,7 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <button class="admin-btn" style="background:#3388ff; color:#fff;" onclick="submitUserReport()">📤 管理者に送信する</button>
 </div>
 </div>
-<div id="screen-settings" class="sub-screen">
+<div id="screen-settings" class="screen"> <h3>設定</h3> 
 <div class="sub-header"><span class="sub-title">⚙️ 設定</span><button class="close-btn" onclick="closeScreen('settings')">閉じる</button></div>
 <div class="admin-section" style="margin-bottom:12px;">
 <h4 style="color:#00f5d4;">🔊 端末連動・システム設定</h4>
@@ -751,6 +751,7 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 </select>
 <button class="admin-btn" onclick="saveUserAvatarChange()">🖼️ アイコンを適用</button>
 </div>
+<div class="admin-section" style="margin-bottom:12px; border-color:#00f5d4;"> <h4 style="color:#00f5d4;">🎵 背景BGM (BGM-1 〜 BGM-9) 設定</h4> <div style="font-size:0.8rem; color:#aaa; margin-bottom:8px;" id="settings-bgm-status">現在の曲: BGM-1</div> <div style="display:flex; gap:8px; margin-bottom:8px;"> <button class="admin-btn" style="background:#3388ff; color:#fff; margin:0;" onclick="playBgmByIndex(currentBgmIndex - 1, true)">◀ 前の曲</button> <button class="admin-btn" style="background:#00f5d4; color:#000; margin:0;" onclick="toggleBgmPlayState()">再生 / 一時停止</button> <button class="admin-btn" style="background:#3388ff; color:#fff; margin:0;" onclick="playBgmByIndex(currentBgmIndex + 1, true)">次の曲 ▶</button> </div> </div> </div> 
 <div id="settings-title-exclusive" class="admin-section" style="display: none; border-color:#ff334b; margin-bottom:12px;">
 <h4 style="color:#ff334b; border-left-color:#ff334b;">⚠️ タイトル画面限定: フォークリセット</h4>
 <p style="font-size:0.75rem; color:#aaa; margin-bottom:8px;">リセットには登録IDの入力が必要です。</p>
