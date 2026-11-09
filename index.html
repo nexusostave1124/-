@@ -4883,8 +4883,19 @@ function playYouTubeSongByIndex(index) {
 }
 
 setTimeout(initDynamicPlaylist, 500);
-
-
+// 設定画面の曲名表示を連動させるための拡張
+if (typeof window.originalUpdateBgmUI === 'undefined' && typeof updateBgmDisplayUI === 'function') {
+    window.originalUpdateBgmUI = updateBgmDisplayUI;
+}
+if (typeof window.originalUpdateBgmUI === 'function') {
+    updateBgmDisplayUI = function(title) {
+        window.originalUpdateBgmUI(title);
+        const st = document.getElementById('settings-bgm-status');     
+        if (st) {
+            st.innerText = `再生中: ${title} (BGM-${currentBgmIndex + 1}/9)`;
+        }
+    };
+}
 </script>
 </body>
 </html>
