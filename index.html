@@ -719,7 +719,10 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <button class="admin-btn" style="background:#3388ff; color:#fff;" onclick="submitUserReport()">📤 管理者に送信する</button>
 </div>
 </div>
-<div id="screen-settings" class="sub-screen">
+
+<!-- 【2】設定画面（id="screen-settings" など）の中に入力フォームを配置 -->
+<div id="screen-settings" class="screen" style="display: none;">
+    <h2>設定画面</h2>
 <div class="sub-header"><span class="sub-title">⚙️ 設定</span><button class="close-btn" onclick="closeScreen('settings')">閉じる</button></div>
 <div class="admin-section" style="margin-bottom:12px;">
 <h4 style="color:#00f5d4;">🔊 端末連動・システム設定</h4>
@@ -740,6 +743,20 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <button class="admin-btn" style="background:#3388ff; color:#fff;" onclick="refreshAppData()">🔄 更新 (データ再取得)</button>
 <button class="admin-btn" style="background:#ff9900; color:#fff;" onclick="restartApp()">♻️ 再起動</button>
 </div>
+    <!-- BGM設定セクション -->
+    <div class="settings-section" style="margin-top: 20px; padding: 15px; background: #222; color: #fff; border-radius: 8px;">
+        <h3>🎵 背景BGM設定 (全9曲)</h3>
+        <p style="font-size: 0.85em; color: #aaa;">各BGMの音声ファイル（mp3など）のURLを設定してください。</p>
+        
+        <!-- 9曲分の入力欄を動的に生成するコンテナ -->
+        <div id="bgm-url-inputs" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
+        
+        <button id="save-bgm-settings-btn" style="margin-top: 12px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            BGM設定を保存
+        </button>
+    </div>
+</div>
+
 <div id="settings-home-exclusive" class="admin-section" style="display: none; margin-bottom:12px;">
 <h4 style="color:#ffee00;">🏠 ホーム画面専用設定</h4>
 <label style="font-size:0.8rem; color:#aaa;">名前変更:</label>
@@ -1134,7 +1151,7 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <button class="close-btn" onclick="closeMinigameModal()" style="width:100%; margin-top:15px;">閉じる</button>
 </div>
 </div>
-<!-- 🎵 背景BGM用オーディオプレイヤー (画面には表示されません) -->
+<!-- 【1】HTMLのどこか（body内）に配置する隠しオーディオプレイヤー -->
 <audio id="bgm-audio" preload="auto"></audio>
 
 <script>
@@ -1875,7 +1892,7 @@ return;
 }
 if (pScore === dScore) {
 bjMultiplier *= 2;
-renderBjUI(`🤝 ドロー (引き分け)！次回獲得Pが ${bjMultiplier}倍 にアップします！`);
+renderBjUI(`🤝  (引き分け)！次回獲得Pが ${bjMultiplier}倍 にアップします！`);
 } else if (dScore > 21 || pScore > dScore) {
 let basePt = getEventMinigameBasePt('blackjack', 350);
 let pts = basePt * bjMultiplier;
