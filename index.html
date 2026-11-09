@@ -4734,7 +4734,7 @@ let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) ||
     { title: "BGM-9", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-9.mp3" }
 ];
 
-let currentBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
+currentBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
 let isBgmUserPaused = false; 
 
 // 🎵 指定した番号のBGMを再生するメイン関数
