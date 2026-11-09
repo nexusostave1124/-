@@ -4735,9 +4735,6 @@ let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) ||
 ];
 
 // 変数がまだ宣言されていない場合のみ安全に定義
-if (typeof currentBgmIndex === 'undefined') {
-    var currentBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
-}
 if (typeof isBgmUserPaused === 'undefined') {
     var isBgmUserPaused = false;
 }
