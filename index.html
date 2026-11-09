@@ -719,7 +719,7 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <button class="admin-btn" style="background:#3388ff; color:#fff;" onclick="submitUserReport()">📤 管理者に送信する</button>
 </div>
 </div>
-<div id="screen-settings" class="screen"> <h3>設定</h3> 
+<div id="screen-settings" class="sub-screen">
 <div class="sub-header"><span class="sub-title">⚙️ 設定</span><button class="close-btn" onclick="closeScreen('settings')">閉じる</button></div>
 <div class="admin-section" style="margin-bottom:12px;">
 <h4 style="color:#00f5d4;">🔊 端末連動・システム設定</h4>
@@ -751,7 +751,6 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 </select>
 <button class="admin-btn" onclick="saveUserAvatarChange()">🖼️ アイコンを適用</button>
 </div>
-<div class="admin-section" style="margin-bottom:12px; border-color:#00f5d4;"> <h4 style="color:#00f5d4;">🎵 背景BGM (BGM-1 〜 BGM-9) 設定</h4> <div style="font-size:0.8rem; color:#aaa; margin-bottom:8px;" id="settings-bgm-status">現在の曲: BGM-1</div> <div style="display:flex; gap:8px; margin-bottom:8px;"> <button class="admin-btn" style="background:#3388ff; color:#fff; margin:0;" onclick="playBgmByIndex(currentBgmIndex - 1, true)">◀ 前の曲</button> <button class="admin-btn" style="background:#00f5d4; color:#000; margin:0;" onclick="toggleBgmPlayState()">再生 / 一時停止</button> <button class="admin-btn" style="background:#3388ff; color:#fff; margin:0;" onclick="playBgmByIndex(currentBgmIndex + 1, true)">次の曲 ▶</button> </div> </div> </div> 
 <div id="settings-title-exclusive" class="admin-section" style="display: none; border-color:#ff334b; margin-bottom:12px;">
 <h4 style="color:#ff334b; border-left-color:#ff334b;">⚠️ タイトル画面限定: フォークリセット</h4>
 <p style="font-size:0.75rem; color:#aaa; margin-bottom:8px;">リセットには登録IDの入力が必要です。</p>
@@ -1135,7 +1134,7 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <button class="close-btn" onclick="closeMinigameModal()" style="width:100%; margin-top:15px;">閉じる</button>
 </div>
 </div>
-<!-- 【1】HTMLのどこか（body内）に配置する隠しオーディオプレイヤー -->
+<!-- 🎵 背景BGM用オーディオプレイヤー (画面には表示されません) -->
 <audio id="bgm-audio" preload="auto"></audio>
 
 <script>
@@ -1459,7 +1458,7 @@ closeAllSelectors();
 
 let html = "";
 eventsList.forEach(ev => {
-html += `<div class="selector-popup-item" onclick="selectEventById('ev.id')">{ev.title}</div>`;
+html += `<div class="selector-popup-item" onclick="selectEventById('${ev.id}')">${ev.title}</div>`;
 });
 listContainer.innerHTML = html;
 popup.classList.add('active');
@@ -1493,7 +1492,7 @@ closeAllSelectors();
 
 let html = "";
 gachaList.forEach(g => {
-html += `<div class="selector-popup-item" onclick="selectGachaById('g.id')">{g.title}</div>`;
+html += `<div class="selector-popup-item" onclick="selectGachaById('${g.id}')">${g.title}</div>`;
 });
 listContainer.innerHTML = html;
 popup.classList.add('active');
@@ -1603,7 +1602,7 @@ periodEl.innerText = "開催終了";
 } else {
 const sStr = formatDateStr(currentEvent.startDate).replace(/-/g, '.');
 const eStr = formatDateStr(currentEvent.endDate).replace(/-/g, '.');
-periodEl.innerText = `sStr〜{eStr}`;
+periodEl.innerText = `${sStr}〜${eStr}`;
 }
 }
 if (currentEvent.logoUrl) {
@@ -1644,7 +1643,7 @@ const hoursLeft = diffMs / (1000 * 60 * 60);
 if (hoursLeft < 72) {
 const hrs = Math.floor(hoursLeft);
 const mins = Math.floor((hoursLeft - hrs) * 60);
-bubble.innerText = `残り hrs時間{mins}分`;
+bubble.innerText = `残り ${hrs}時間${mins}分`;
 bubble.style.display = "block";
 } else {
 const daysLeft = Math.ceil(hoursLeft / 24);
@@ -1828,7 +1827,7 @@ function calcBjScore(cards) {
 return cards.reduce((a, b) => a + b, 0);
 }
 function renderBjUI(msg = "") {
-const dealerDisplay = bjGameOver ? `[${bjDealer.join(', ')}] (合計: calcBjScore(bjDealer))`:`[{bjDealer[0]}, ?]`;
+const dealerDisplay = bjGameOver ? `[${bjDealer.join(', ')}] (合計: ${calcBjScore(bjDealer)})` : `[${bjDealer[0]}, ?]`;
 const actionButtonsHtml = bjGameOver ? 
 `<button class="game-btn" style="background:#ffee00; color:#000; padding:12px; font-weight:bold;" onclick="resetBlackjackRound()">もう一回</button>` :
 `<div style="display:flex; gap:10px; justify-content:center;">
@@ -1963,7 +1962,7 @@ pts = -400;
 }
 addCurrentPt(pts);
 const resEl = document.getElementById('sw-res');
-if (resEl) resEl.innerHTML = `結果: ${currentElapsedDisplay.toFixed(2)}秒 (誤差: diff.toFixed(2)秒)<br><spanstyle="color:{pts >= 0 ? '#00f5d4' : '#ff334b'};">pts>=0?'+':''{pts}P</span>`;
+if (resEl) resEl.innerHTML = `結果: ${currentElapsedDisplay.toFixed(2)}秒 (誤差: ${diff.toFixed(2)}秒)<br><span style="color:${pts >= 0 ? '#00f5d4' : '#ff334b'};">${pts >= 0 ? '+' : ''}${pts}P</span>`;
 }
 }
 
@@ -1992,7 +1991,7 @@ let n = Number(num);
 if (n === 3 || n === 7) color = "#ffd700"; // 金
 else if (n === 1 || n === 5 || n === 9) color = "#ff334b"; // 赤
 else if (n === 2 || n === 4 || n === 6 || n === 8) color = "#00bfff"; // 青
-return `<span style="color: color;">{num}</span>`;
+return `<span style="color: ${color};">${num}</span>`;
 }
 function startSlotGame() {
 document.getElementById('minigame-game-screen').style.display = 'block';
@@ -2151,7 +2150,8 @@ if (n1 === n2 && n2 === n3) {
     
     saveSlotUserData(sData);
     addCurrentPt(earnedPt);
-    msg = `🎉 【大当り (${colorLabel}・${n1}揃い)】 +${earnedPt}P！ST${sData.stCount}回+時短${sData.jitanCount}回 突入！`; } 
+    msg = `🎉 【大当り (${colorLabel}・${n1}揃い)】 +${earnedPt}P！ ST${sData.stCount}回+時短${sData.jitanCount}回 突入！`;
+}
  else {
 if (!sData.inST && !sData.inJitan) {
 sData.highestMode = "NONE";
@@ -2329,7 +2329,7 @@ else if (idx === 2) rankColor = "#ff9900";
 html += `
 <div style="background:#222; padding:8px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border-left:4px solid ${rankColor}; ${isMe ? 'background:rgba(0,245,212,0.15);' : ''}">
 <div style="display:flex; align-items:center; gap:10px;">
-<span style="font-weight:bold; font-size:1rem; color:rankColor;min-width:30px;">#{idx + 1}</span>
+<span style="font-weight:bold; font-size:1rem; color:${rankColor}; min-width:30px;">#${idx + 1}</span>
 <div>
 <div style="font-weight:bold; font-size:0.9rem; color:#fff;">${m.name} ${isMe ? '<span style="color:#00f5d4; font-size:0.75rem;">(あなた)</span>' : ''}</div>
 <div style="font-size:0.7rem; color:#888;">ID: ${m.id}</div>
@@ -2420,13 +2420,13 @@ container.innerHTML = "";
 let selectHtml = `<option value="">(メンバーを選択)</option>`;
 memberDatabase.forEach(m => {
 const isNeo = m.id === "A-24-11-9-a";
-selectHtml += `<option value="m.id">{m.name} (${m.id})</option>`;
+selectHtml += `<option value="${m.id}">${m.name} (${m.id})</option>`;
 const row = document.createElement('div');
 row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #333;";
 row.innerHTML = `
 <span>👤 ${m.name} (ID: ${m.id}) ${isNeo ? '<span style="color:#888;font-size:0.7rem;">(運営者)</span>' : ''}</span>
 <div style="display:flex; align-items:center; gap:8px;">
-<span style="color:isNeo?'#888':'#ffee00';font-weight:bold;">{m.pt || 0} P</span>
+<span style="color:${isNeo ? '#888' : '#ffee00'};font-weight:bold;">${m.pt || 0} P</span>
 <button onclick="adminChangeUserPt('${m.id}')" style="background:#00f5d4; color:#000; border:none; padding:2px 8px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.75rem;">直接P変更</button>
 </div>
 `;
@@ -2443,7 +2443,7 @@ const row = document.createElement('div');
 row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #333;";
 row.innerHTML = `
 <div>
-<span style="font-weight:bold; color:#fff;">👤 m.name</span><spanstyle="font-size:0.7rem;color:#888;">({m.id})</span>
+<span style="font-weight:bold; color:#fff;">👤 ${m.name}</span> <span style="font-size:0.7rem; color:#888;">(${m.id})</span>
 <div style="font-size:0.75rem; margin-top:2px;">
 <span style="color:#00f5d4;">💎: ${(m.gem || 0).toLocaleString()}</span> | 
 <span style="color:#ffee00;">🪙: ${(m.coin || 0).toLocaleString()}</span>
@@ -2560,7 +2560,7 @@ container.innerHTML += `<div style="color:#888;">登録されている商品は�
 return;
 }
 shopItemsList.forEach(item => {
-const imgRender = (item.imgType === 'emoji') ? `<span style="font-size:1.2rem;">item.imgVal</span>`:`<imgsrc="{item.imgVal}" style="width:24px; height:24px; object-fit:cover; border-radius:4px;">`;
+const imgRender = (item.imgType === 'emoji') ? `<span style="font-size:1.2rem;">${item.imgVal}</span>` : `<img src="${item.imgVal}" style="width:24px; height:24px; object-fit:cover; border-radius:4px;">`;
 const row = document.createElement('div');
 row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#222; padding:6px 10px; border-radius:6px; margin-bottom:4px;";
 row.innerHTML = `
@@ -2671,7 +2671,7 @@ let html = "";
 eventHistory.forEach((item, index) => {
 html += `
 <div style="display:flex; justify-content:space-between; align-items:center; background:#181818; padding:6px 8px; border-radius:6px; margin-bottom:4px;">
-<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px;">item.title({item.archivedDate})</span>
+<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px;">${item.title} (${item.archivedDate})</span>
 <button onclick="adminDeleteHistoryItem(${index})" style="background:#ff334b; color:#fff; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">削除</button>
 </div>
 `;
@@ -2720,7 +2720,7 @@ const sel = document.getElementById('admin-event-switcher-select');
 if (!sel) return;
 let html = `<option value="NONE">(0件・イベントなし)</option>`;
 eventsList.forEach(ev => {
-html += `<option value="${ev.id}" currentEvent&&ev.id===currentEvent.id?'selected':''>{ev.title} (${ev.status})</option>`;
+html += `<option value="${ev.id}" ${currentEvent && ev.id === currentEvent.id ? 'selected' : ''}>${ev.title} (${ev.status})</option>`;
 });
 sel.innerHTML = html;
 }
@@ -2912,7 +2912,7 @@ const sel = document.getElementById('admin-gacha-switcher-select');
 if (!sel) return;
 let html = `<option value="NONE">(0件・ガチャなし)</option>`;
 gachaList.forEach(g => {
-html += `<option value="${g.id}" currentGachaConfig&&g.id===currentGachaConfig.id?'selected':''>{g.title} (${g.status})</option>`;
+html += `<option value="${g.id}" ${currentGachaConfig && g.id === currentGachaConfig.id ? 'selected' : ''}>${g.title} (${g.status})</option>`;
 });
 sel.innerHTML = html;
 }
@@ -3091,7 +3091,7 @@ listEl.innerHTML = `<div style="color:#00f5d4; margin-bottom:4px;">登録中 (${
 titleBgImages.forEach(img => {
 const row = document.createElement('div');
 row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#222; padding:6px; border-radius:6px; margin-bottom:4px;";
-row.innerHTML = `<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">img.name</span><buttononclick="adminRemoveTitleBg('{img.id}')" style="background:#ff334b; color:#fff; border:none; padding:2px 8px; border-radius:4px; cursor:pointer;">削除</button>`;
+row.innerHTML = `<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">${img.name}</span><button onclick="adminRemoveTitleBg('${img.id}')" style="background:#ff334b; color:#fff; border:none; padding:2px 8px; border-radius:4px; cursor:pointer;">削除</button>`;
 listEl.appendChild(row);
 });
 }
@@ -3167,7 +3167,7 @@ function renderGachaScreen() {
 
     // 🕒 ホーム・イベント画面と完全に共通化された時計の取得ロジック
     const now = new Date();
-    const timeStr = `String(now.getHours()).padStart(2,'0'):{String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
     
     // ホームやイベント画面で使用されている共通の時計設定変数・フォント・カラーをそのまま適用
     const clockColor = (typeof clockFontColor !== 'undefined' && clockFontColor) ? clockFontColor : 
@@ -3181,7 +3181,7 @@ function renderGachaScreen() {
         <!-- 背景バナー スライドショーコンテナ -->
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden;">
             ${slideBanners.map((url, idx) => `
-                <div class="gacha-slide-banner" data-index="idx"style="position:absolute;top:0;left:0;width:100%;height:100%;background-image:url('{url}'); background-size: cover; background-position: center; opacity: ${idx === 0 ? '1' : '0'}; transition: opacity 1s ease-in-out; filter: brightness(0.85);"></div>
+                <div class="gacha-slide-banner" data-index="${idx}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('${url}'); background-size: cover; background-position: center; opacity: ${idx === 0 ? '1' : '0'}; transition: opacity 1s ease-in-out; filter: brightness(0.85);"></div>
             `).join('')}
             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%); z-index: 1;"></div>
         </div>
@@ -3197,7 +3197,7 @@ function renderGachaScreen() {
             <!-- 右上: ホーム・イベント画面完全共通の時計 ＆ 下に ︙ ボタン -->
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
                 <span style="font-size: 0.7rem; color: #ccc; text-shadow: 1px 1px 2px #000; font-family: ${clockFont};">現在時刻</span>
-                <div id="gacha-live-clock" style="color: ${clockColor}; font-size: 1.6rem; font-weight: bold; font-family: ${clockFont}; text-shadow: 0 0 10px clockColor;font-variant-numeric:tabular-nums;line-height:1.1;">{timeStr}</div>
+                <div id="gacha-live-clock" style="color: ${clockColor}; font-size: 1.6rem; font-weight: bold; font-family: ${clockFont}; text-shadow: 0 0 10px ${clockColor}; font-variant-numeric: tabular-nums; line-height: 1.1;">${timeStr}</div>
                 <button onclick="toggleGachaRateModal()" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); color: #fff; font-size: 1.1rem; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 4px;">︙</button>
             </div>
         </div>
@@ -3208,7 +3208,7 @@ function renderGachaScreen() {
             <!-- 左下: 期間 ＆ 管理画面で独立設定した小枠画像（タイトル表記なし） -->
             <div style="display: flex; flex-direction: column; gap: 4px; width: 52%;">
                 <span style="background: #28a745; color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; width: fit-content;">${currentGachaConfig.type}</span>
-                <div style="font-size: 0.65rem; color: #eee; text-shadow: 1px 1px 2px #000;">formatDateStr(currentGachaConfig.startDate)〜{formatDateStr(currentGachaConfig.endDate)}</div>
+                <div style="font-size: 0.65rem; color: #eee; text-shadow: 1px 1px 2px #000;">${formatDateStr(currentGachaConfig.startDate)}〜${formatDateStr(currentGachaConfig.endDate)}</div>
                 
                 <div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; padding: 4px; backdrop-filter: blur(4px);">
                     <div style="width: 100%; height: 60px; background-image: url('${subBoxImgUrl}'); background-size: cover; background-position: center; border-radius: 6px;"></div>
@@ -3237,7 +3237,7 @@ function renderGachaScreen() {
                 <!-- 排出率テーブル -->
                 <table class="rate-table" style="margin-bottom: 15px; width:100%;">
                     <thead><tr><th>★6</th><th>★5</th><th>★4</th><th>★3</th><th>★2</th></tr></thead>
-                    <tbody><tr><td>rates["★6"]%</td><td>{rates["★5"]}%</td><td>rates["★4"]%</td><td>{rates["★3"]}%</td><td>${rates["★2"]}%</td></tr></tbody>
+                    <tbody><tr><td>${rates["★6"]}%</td><td>${rates["★5"]}%</td><td>${rates["★4"]}%</td><td>${rates["★3"]}%</td><td>${rates["★2"]}%</td></tr></tbody>
                 </table>
 
                 <!-- チェックが入った★4〜6スライドショー対象アイテムの表示エリア -->
@@ -3281,7 +3281,7 @@ window.gachaClockInterval = setInterval(() => {
     const clockEl = document.getElementById('gacha-live-clock');
     if (clockEl) {
         const now = new Date();
-        clockEl.innerText = `String(now.getHours()).padStart(2,'0'):{String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        clockEl.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
         
         // 共通設定カラー・フォントの随時反映
         const activeColor = (typeof clockFontColor !== 'undefined' && clockFontColor) ? clockFontColor : 
@@ -3420,24 +3420,15 @@ function playDefaultSongOnLogin() {
     playBgmByIndex(0);
 }
 
-// 【変更後】
 function adminLogout() {
-    isAdmin = false;
-    localStorage.setItem('nexus_is_admin', 'false');
-    currentUser = null;
-    localStorage.removeItem('nexus_current_user');
-    reloadUserData();
-    closeOtherMenu();
-    
-    // 🎵 【追加】正しいID「bgm-audio」を指定して完全に停止・リセットする
-    const audioEl = document.getElementById('bgm-audio');
-    if (audioEl) {
-        audioEl.pause();
-        audioEl.currentTime = 0;
-    }
-    isBgmUserPaused = true; // 手動停止扱いにする
-    
-    alert("🔒 ログアウトしました。");
+isAdmin = false;
+localStorage.setItem('nexus_is_admin', 'false');
+currentUser = null;
+localStorage.removeItem('nexus_current_user');
+reloadUserData();
+closeOtherMenu();
+if (audioPlayer) audioPlayer.pause();
+alert("🔒 ログアウトしました。");
 }
 function reloadUserData() {
 userAlbum = JSON.parse(localStorage.getItem(getUserAlbumKey())) || [];
@@ -3540,7 +3531,7 @@ const selectEl = document.getElementById('admin-target-album-select');
 if (!selectEl) return;
 let html = `<option value="">(メンバーを選択してください)</option>`;
 memberDatabase.forEach(m => {
-html += `<option value="m.id">{m.name} (ID: ${m.id})</option>`;
+html += `<option value="${m.id}">${m.name} (ID: ${m.id})</option>`;
 });
 selectEl.innerHTML = html;
 }
@@ -3549,7 +3540,7 @@ const selectEl = document.getElementById('admin-target-present-select');
 if (!selectEl) return;
 let html = `<option value="">(メンバーを選択してください)</option>`;
 memberDatabase.forEach(m => {
-html += `<option value="m.id">{m.name} (ID: ${m.id})</option>`;
+html += `<option value="${m.id}">${m.name} (ID: ${m.id})</option>`;
 });
 selectEl.innerHTML = html;
 }
@@ -3573,7 +3564,7 @@ html += `
 <div style="background:#222; border:1px solid #444; border-radius:8px; padding:8px; display:flex; justify-content:space-between; align-items:center;">
 <div>
 <div style="font-weight:bold; font-size:0.85rem; color:#fff;">🎁 ${gift.title}</div>
-<div style="font-size:0.7rem; color:#00f5d4;">💎:+gift.gem||0|🪙:+{gift.coin || 0}</div>
+<div style="font-size:0.7rem; color:#00f5d4;">💎:+${gift.gem || 0} | 🪙:+${gift.coin || 0}</div>
 </div>
 <button onclick="adminDeleteMemberPresentItem('${targetId}', ${idx})" style="background:#ff334b; color:#fff; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer;">削除する</button>
 </div>
@@ -3611,7 +3602,7 @@ html += `
 <div style="background:#222; border:1px solid #444; border-radius:8px; overflow:hidden; padding:6px;">
 <img src="${img.url}" style="width:100%; height:90px; object-fit:cover; border-radius:6px; margin-bottom:4px;">
 <div style="font-size:0.75rem; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:4px;">${img.name}</div>
-<button onclick="adminDeleteMemberAlbumItem('targetId','{img.id}')" style="width:100%; background:#ff334b; color:#fff; border:none; padding:4px; border-radius:4px; font-weight:bold; font-size:0.7rem; cursor:pointer;">削除する</button>
+<button onclick="adminDeleteMemberAlbumItem('${targetId}','${img.id}')" style="width:100%; background:#ff334b; color:#fff; border:none; padding:4px; border-radius:4px; font-weight:bold; font-size:0.7rem; cursor:pointer;">削除する</button>
 </div>
 `;
 });
@@ -3643,7 +3634,7 @@ alert(rankingLocked ? "🏆 ランキングを【ロック】しました。" : 
 function toggleIndividualUserRestriction(userId, checkbox) {
 userRestrictionMap[userId] = checkbox.checked;
 localStorage.setItem('nexus_restricted_users', JSON.stringify(userRestrictionMap));
-alert(checkbox.checked ? `🚫 [userId]のアクセスを【制限】しました。`:`🔓[{userId}] の制限を【解除】しました。`);
+alert(checkbox.checked ? `🚫 [${userId}] のアクセスを【制限】しました。` : `🔓 [${userId}] の制限を【解除】しました。`);
 }
 function renderAdminUserRestrictionList() {
 const container = document.getElementById('admin-user-restriction-list');
@@ -3655,9 +3646,9 @@ const isRestricted = userRestrictionMap[m.id] === true;
 const row = document.createElement('div');
 row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid #333;";
 row.innerHTML = `
-<span>👤 m.name({m.id})</span>
+<span>👤 ${m.name} (${m.id})</span>
 <label style="font-size:0.75rem; color:${isRestricted ? '#ff334b' : '#00f5d4'}; cursor:pointer;">
-<input type="checkbox" isRestricted?'checked':''onchange="toggleIndividualUserRestriction('{m.id}', this)"> アクセス制限
+<input type="checkbox" ${isRestricted ? 'checked' : ''} onchange="toggleIndividualUserRestriction('${m.id}', this)"> アクセス制限
 </label>
 `;
 container.appendChild(row);
@@ -3727,7 +3718,7 @@ rankHtml += `<div style="display:flex; flex-direction:column; gap:4px; max-heigh
 item.rankings.forEach(r => {
 rankHtml += `
 <div style="background:#222; padding:6px 10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-<span>#${r.rank} r.name({r.id})</span>
+<span>#${r.rank} ${r.name} (${r.id})</span>
 <span style="color:#ffee00; font-weight:bold;">${Number(r.pt).toLocaleString()} P</span>
 </div>
 `;
@@ -3846,7 +3837,7 @@ row.style.cssText = "display:flex; justify-content:space-between; align-items:ce
 row.innerHTML = `
 <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${gift.title}</span>
 <div style="display:flex; align-items:center; gap:8px;">
-<button onclick="toggleGiftActive('gift.id')"style="background:{isActive ? '#00f5d4' : '#555'}; color:isActive?'#000':'#fff';border:none;padding:2px8px;border-radius:4px;cursor:pointer;font-size:0.75rem;">{isActive ? '配布中(ON)' : '一時停止(OFF)'}</button>
+<button onclick="toggleGiftActive('${gift.id}')" style="background:${isActive ? '#00f5d4' : '#555'}; color:${isActive ? '#000' : '#fff'}; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">${isActive ? '配布中(ON)' : '一時停止(OFF)'}</button>
 <button onclick="adminDeleteGlobalGift('${gift.id}')" style="background:#ff334b; color:#fff; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:0.75rem;">削除</button>
 </div>
 `;
@@ -3865,7 +3856,7 @@ let html = `
 memberDatabase.forEach(m => {
 html += `
 <label style="display:flex; align-items:center; gap:6px; margin-bottom:2px; cursor:pointer;">
-<input type="checkbox" class="gift-target-chk" value="${m.id}"> m.name({m.id})
+<input type="checkbox" class="gift-target-chk" value="${m.id}"> ${m.name} (${m.id})
 </label>
 `;
 });
@@ -3883,7 +3874,7 @@ const rarities = ["★6", "★5", "★4", "★3", "★2"];
 rarities.forEach(rar => {
 const items = masterDriveImages.filter(i => (i.rarity === rar) || (!i.rarity && i.name.includes(rar)));
 let html = `<div style="background:#222; padding:8px; border-radius:6px; margin-bottom:6px;">`;
-html += `<div style="color:#ffee00; font-weight:bold; border-bottom:1px solid #444; padding-bottom:2px; margin-bottom:4px;">rar({items.length}件)</div>`;
+html += `<div style="color:#ffee00; font-weight:bold; border-bottom:1px solid #444; padding-bottom:2px; margin-bottom:4px;">${rar} (${items.length}件)</div>`;
 
 if (items.length === 0) {
 html += `<div style="color:#888; font-size:0.75rem;">アイテムなし</div>`;
@@ -3947,7 +3938,7 @@ alert("タイトルと本文を入力してください。");
 return;
 }
 const now = new Date();
-const timeFormatted = `now.getFullYear().{String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} String(now.getHours()).padStart(2,'0'):{String(now.getMinutes()).padStart(2,'0')}`;
+const timeFormatted = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 const noticeObj = {
 id: 'notice_' + Date.now(),
 title: title,
@@ -3998,9 +3989,9 @@ const isActive = notice.active !== false;
 const row = document.createElement('div');
 row.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#222; padding:6px 10px; border-radius:6px; margin-bottom:4px;";
 row.innerHTML = `
-<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px;">notice.title({notice.date})</span>
+<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px;">${notice.title} (${notice.date})</span>
 <div style="display:flex; align-items:center; gap:6px;">
-<button onclick="toggleNoticeActive('notice.id')"style="background:{isActive ? '#00f5d4' : '#555'}; color:isActive?'#000':'#fff';border:none;padding:2px6px;border-radius:4px;cursor:pointer;font-size:0.7rem;">{isActive ? '表示中' : '一時停止'}</button>
+<button onclick="toggleNoticeActive('${notice.id}')" style="background:${isActive ? '#00f5d4' : '#555'}; color:${isActive ? '#000' : '#fff'}; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; font-size:0.7rem;">${isActive ? '表示中' : '一時停止'}</button>
 <button onclick="adminDeleteNotice('${notice.id}')" style="background:#ff334b; color:#fff; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; font-size:0.7rem;">削除</button>
 </div>
 `;
@@ -4051,7 +4042,7 @@ const shopDriveSelect = document.getElementById('admin-shop-drive-select');
 if (!gachaSelect || !giftSelect || !shopDriveSelect) return;
 let optionsHtml = `<option value="">(選択してください)</option>`;
 masterDriveImages.forEach(img => {
-optionsHtml += `<option value="img.url">{img.name}</option>`;
+optionsHtml += `<option value="${img.url}">${img.name}</option>`;
 });
 gachaSelect.innerHTML = optionsHtml;
 gachaBannerSelect.innerHTML = `<option value="">(バナーなし)</option>` + optionsHtml;
@@ -4081,7 +4072,7 @@ const selectEl = document.getElementById('settings-avatar-select');
 if (!selectEl) return;
 let html = `<option value="">(デフォルト・削除)</option>`;
 userAlbum.forEach(img => {
-html += `<option value="img.url">{img.name}</option>`;
+html += `<option value="${img.url}">${img.name}</option>`;
 });
 selectEl.innerHTML = html;
 }
@@ -4258,7 +4249,7 @@ function playGachaAnimation(results, maxRarity, isUpgrade) {
                                     border-radius: 8px; padding: 10px 4px; text-align: center;
                                     box-shadow: 0 0 8px ${getRarityBorderColor(item.rarityNum)};
                                 ">
-                                    <div style="font-size: 0.9rem; font-weight: bold; color: getRarityTextColor(item.rarityNum);">{item.rarity}</div>
+                                    <div style="font-size: 0.9rem; font-weight: bold; color: ${getRarityTextColor(item.rarityNum)};">${item.rarity}</div>
                                 </div>
                             `).join('')}
                         </div>
@@ -4321,7 +4312,7 @@ ${gift.imgUrl ? `<img src="${gift.imgUrl}" alt="${gift.title}">` : `<div style="
 </div>
 <div class="album-card-info">
 <div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px;">${gift.title}</div>
-<div style="font-size:0.7rem; color:#00f5d4; margin-bottom:6px;">💎:+gift.gem||0|🪙:+{gift.coin || 0}</div>
+<div style="font-size:0.7rem; color:#00f5d4; margin-bottom:6px;">💎:+${gift.gem || 0} | 🪙:+${gift.coin || 0}</div>
 <div style="display:flex; gap:4px;">
 <button onclick="event.stopPropagation(); claimGift(${index})" style="flex:1; background:#00f5d4; color:#000; border:none; padding:4px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer;">受け取る</button>
 <button onclick="event.stopPropagation(); deleteGift(${index})" style="flex:1; background:#ff334b; color:#fff; border:none; padding:4px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer;">削除</button>
@@ -4457,10 +4448,10 @@ const isInSlideshow = userSlideshowIds.includes(img.id);
 const card = document.createElement('div');
 card.className = 'album-card' + (isInSlideshow ? ' in-slideshow' : '');
 card.innerHTML = `
-<div class="album-img-box"><img src="img.url"alt="{img.name}"></div>
+<div class="album-img-box"><img src="${img.url}" alt="${img.name}"></div>
 <div class="album-card-info">
 <div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${img.name}</div>
-<div style="font-size:0.7rem; color:isInSlideshow?'#00f5d4':'#888';">{isInSlideshow ? '✓ スライド中' : 'タップしてスライド登録'}</div>
+<div style="font-size:0.7rem; color:${isInSlideshow ? '#00f5d4' : '#888'};">${isInSlideshow ? '✓ スライド中' : 'タップしてスライド登録'}</div>
 </div>
 `;
 card.onclick = () => toggleSlideshow(img.id);
@@ -4500,7 +4491,7 @@ const now = new Date();
 const h = String(now.getHours()).padStart(2, '0');
 const m = String(now.getMinutes()).padStart(2, '0');
 const s = String(now.getSeconds()).padStart(2, '0');
-const timeStr = `h:{m}:${s}`;
+const timeStr = `${h}:${m}:${s}`;
 
 const rClock = document.getElementById('real-clock');
 if (rClock) rClock.innerText = timeStr;
@@ -4586,7 +4577,7 @@ function toggleOtherMenu() { document.getElementById('other-modal').classList.ad
 function closeOtherMenu() { document.getElementById('other-modal').classList.remove('active'); }
 
 let openedFromTitle = false;
-function openScreen(name, fromTitle = false) { 
+function openScreen(name, fromTitle = false) {
 closeOtherMenu();
 closeAllSelectors();
 openedFromTitle = fromTitle;
@@ -4636,10 +4627,10 @@ document.getElementById('nav-' + name).classList.add('active');
 }
 const target = document.getElementById('screen-' + name);
 if (target) target.classList.add('active');
-// 🎵 【追加】遊戯画面を開いたときはBGMを一時停止 const audioEl = document.getElementById('bgm-audio'); if (name === 'play' && audioEl) { audioEl.pause(); } } 
-function closeScreen(name) { const screen = document.getElementById('screen-play'); if (screen) screen.classList.remove('active'); 
-// 🎵 【追加】遊戯画面を閉じたとき、遊戯以外ならBGMの再生を復旧 const audioEl = document.getElementById('bgm-audio'); if (name === 'play' && currentUser && audioEl && !isBgmUserPaused) { audioEl.play().catch(e => {}); } 
-
+}
+function closeScreen(name) { 
+const screen = document.getElementById('screen-' + name);
+if (screen) screen.classList.remove('active'); 
 
 const bottomNav = document.getElementById('main-bottom-nav');
 if (bottomNav) bottomNav.classList.remove('hide-menu');
@@ -4731,7 +4722,6 @@ window.location.reload();
 }
 }
 // 🎵 9曲のBGMリスト（一番上の1箇所だけに絞る）
-// 🎵 9曲のBGMリスト（一番上の1箇所だけに絞る）
 let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) || [
     { title: "BGM-1", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-1.mp3" },
     { title: "BGM-2", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-2.mp3" },
@@ -4743,6 +4733,7 @@ let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) ||
     { title: "BGM-8", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-8.mp3" },
     { title: "BGM-9", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-9.mp3" }
 ];
+
 currentBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
 let isBgmUserPaused = false; 
 
@@ -4796,21 +4787,6 @@ window.addEventListener('click', () => {
         }
     }
 });
-
-// 🎵 BGMの再生状態をトグル切り替え
-function toggleBgmPlayState() {
-    const audioEl = document.getElementById('bgm-audio');
-    if (!audioEl) return;
-    if (audioEl.paused) {
-        isBgmUserPaused = false;
-        audioEl.play().catch(e => {});
-        alert("▶ BGMを再開しました");
-    } else {
-        isBgmUserPaused = true;
-        audioEl.pause();
-        alert("⏸ BGMを一時停止しました");
-    }
-}
 
 // ==========================================
 // 🎵 楽曲リスト & 再生インデックス管理（YouTube）
@@ -4881,20 +4857,16 @@ function playYouTubeSongByIndex(index) {
     }
 }
 
+function playDefaultSongOnLogin() {
+    initDynamicPlaylist();
+    if (currentTargetSongs.length > 0) {
+        currentSongIndex = 0;
+        const miniTitle = document.getElementById('mini-song-title');
+        if (miniTitle) miniTitle.innerText = currentTargetSongs[0].title;
+    }
+}
+
 setTimeout(initDynamicPlaylist, 500);
-// 設定画面の曲名表示を連動させるための拡張
-if (typeof window.originalUpdateBgmUI === 'undefined' && typeof updateBgmDisplayUI === 'function') {
-    window.originalUpdateBgmUI = updateBgmDisplayUI;
-}
-if (typeof window.originalUpdateBgmUI === 'function') {
-    updateBgmDisplayUI = function(title) {
-        window.originalUpdateBgmUI(title);
-        const st = document.getElementById('settings-bgm-status');     
-        if (st) {
-            st.innerText = `再生中: ${title} (BGM-${currentBgmIndex + 1}/9)`;
-        }
-    };
-}
 </script>
 </body>
 </html>
