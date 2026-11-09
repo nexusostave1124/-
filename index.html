@@ -3420,15 +3420,24 @@ function playDefaultSongOnLogin() {
     playBgmByIndex(0);
 }
 
+// 【変更後】
 function adminLogout() {
-isAdmin = false;
-localStorage.setItem('nexus_is_admin', 'false');
-currentUser = null;
-localStorage.removeItem('nexus_current_user');
-reloadUserData();
-closeOtherMenu();
-if (audioPlayer) audioPlayer.pause();
-alert("🔒 ログアウトしました。");
+    isAdmin = false;
+    localStorage.setItem('nexus_is_admin', 'false');
+    currentUser = null;
+    localStorage.removeItem('nexus_current_user');
+    reloadUserData();
+    closeOtherMenu();
+    
+    // 🎵 【追加】正しいID「bgm-audio」を指定して完全に停止・リセットする
+    const audioEl = document.getElementById('bgm-audio');
+    if (audioEl) {
+        audioEl.pause();
+        audioEl.currentTime = 0;
+    }
+    isBgmUserPaused = true; // 手動停止扱いにする
+    
+    alert("🔒 ログアウトしました。");
 }
 function reloadUserData() {
 userAlbum = JSON.parse(localStorage.getItem(getUserAlbumKey())) || [];
@@ -4577,7 +4586,7 @@ function toggleOtherMenu() { document.getElementById('other-modal').classList.ad
 function closeOtherMenu() { document.getElementById('other-modal').classList.remove('active'); }
 
 let openedFromTitle = false;
-function openScreen(name, fromTitle = false) {
+function openScreen(name, fromTitle = false) { 
 closeOtherMenu();
 closeAllSelectors();
 openedFromTitle = fromTitle;
@@ -4627,10 +4636,10 @@ document.getElementById('nav-' + name).classList.add('active');
 }
 const target = document.getElementById('screen-' + name);
 if (target) target.classList.add('active');
-}
-function closeScreen(name) { 
-const screen = document.getElementById('screen-' + name);
-if (screen) screen.classList.remove('active'); 
+// 🎵 【追加】遊戯画面を開いたときはBGMを一時停止 const audioEl = document.getElementById('bgm-audio'); if (name === 'play' && audioEl) { audioEl.pause(); } } 
+function closeScreen(name) { const screen = document.getElementById('screen-play'); if (screen) screen.classList.remove('active'); 
+// 🎵 【追加】遊戯画面を閉じたとき、遊戯以外ならBGMの再生を復旧 const audioEl = document.getElementById('bgm-audio'); if (name === 'play' && currentUser && audioEl && !isBgmUserPaused) { audioEl.play().catch(e => {}); } 
+
 
 const bottomNav = document.getElementById('main-bottom-nav');
 if (bottomNav) bottomNav.classList.remove('hide-menu');
