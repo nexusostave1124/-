@@ -4899,9 +4899,8 @@ function playDefaultSongOnLogin() {
     }
 }
 
-setTimeout(initDynamicPlaylist, 500);
+setTimeout(initDynamicPlaylist, 500);  // BGM再生/一時停止切り替え function toggleBgmPlayState() {     const audioEl = document.getElementById('bgm-audio');     if (!audioEl) return;     if (audioEl.paused) {         isBgmUserPaused = false;         audioEl.play().catch(e => {});         alert("▶ BGMを再開しました");     } else {         isBgmUserPaused = true;         audioEl.pause();         alert("⏸ BGMを一時停止しました");     } }  // 設定画面の曲名表示を連動させるための拡張 const originalUpdateBgmUI = typeof updateBgmDisplayUI === 'function' ? updateBgmDisplayUI : null; updateBgmDisplayUI = function(title) {     if (originalUpdateBgmUI) originalUpdateBgmUI(title);     const st = document.getElementById('settings-bgm-status');     if (st) st.innerText = `再生中: ${title} (BGM-${currentBgmIndex + 1}/9)`; }; 
 </script>
 </body>
 </html>
-
 
