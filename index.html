@@ -4721,71 +4721,7 @@ window.location.reload();
 }
 }
 }
-// 🎵 ユーザーが設定・管理する9曲のBGMリスト
-let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) || [
-    { title: "BGM-1", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-1.mp3" },
-    { title: "BGM-2", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-2.mp3" },
-    { title: "BGM-3", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-3.mp3" },
-    { title: "BGM-4", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-4.mp3" },
-    { title: "BGM-5", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-5.mp3" },
-    { title: "BGM-6", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-6.mp3" },
-    { title: "BGM-7", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-7.mp3" },
-    { title: "BGM-8", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-8.mp3" },
-    { title: "BGM-9", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-9.mp3" }
-];
-
-let currentBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
-let isBgmUserPaused = false;
-
-// 🎵 指定した番号のBGMを安全に再生する関数（ループ・続きから再生対応）
-function playBgmByIndex(index, forceRestart = false) {
-    if (!currentUser) return; // 未ログイン時は流さない
-    if (!bgmPlayer) return;
-
-    // BGM-9（index 8）の次に行ったら0（BGM-1）に戻るループ
-    if (index >= customBgmList.length) index = 0;
-    if (index < 0) index = customBgmList.length - 1;
-
-    currentBgmIndex = index;
-    localStorage.setItem('nexus_bgm_index', currentBgmIndex);
-    const song = customBgmList[currentBgmIndex];
-
-    if (bgmPlayer.src !== song.url || forceRestart) {
-        bgmPlayer.src = song.url;
-    }
-
-    // 遊戯画面（screen-play）が開いているときはBGMを再生しない
-    const playScreen = document.getElementById('screen-play');
-    const isPlayScreenOpen = playScreen && playScreen.classList.contains('active');
-
-    if (!isPlayScreenOpen && !isBgmUserPaused) {
-        bgmPlayer.play().then(() => {
-            const miniTitle = document.getElementById('mini-song-title');
-            if (miniTitle) miniTitle.innerText = song.title;
-        }).catch(e => {
-            console.log("自動再生ブロック（画面をタップすると続きから再生されます）:", e);
-        });
-    }
-}
-
-// 🎵 1曲終わったら自動的に次の曲へ（BGM-9の次はBGM-1へ）
-if (bgmPlayer) {
-    bgmPlayer.onended = () => {
-        playBgmByIndex(currentBgmIndex + 1, true);
-    };
-}
-
-// 🎵 画面上のどこかをタップ/クリックした時に「続きから」再生を復旧させるリスナー
-window.addEventListener('click', () => {
-    if (currentUser && bgmPlayer && bgmPlayer.paused && !isBgmUserPaused) {
-        const playScreen = document.getElementById('screen-play');
-        const isPlayScreenOpen = playScreen && playScreen.classList.contains('active');
-        if (!isPlayScreenOpen) {
-            bgmPlayer.play().catch(e => {});
-        }
-    }
-});
-// 🎵 9曲のBGMリスト（重複エラー防止・完全版）
+// 🎵 9曲のBGMリスト & BGM管理システム（重複エラー解消・統合版）
 let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) || [
     { title: "BGM-1", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-1.mp3" },
     { title: "BGM-2", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-2.mp3" },
@@ -4798,10 +4734,13 @@ let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) ||
     { title: "BGM-9", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-9.mp3" }
 ];
 
-if (typeof window.nexusBgmIndex === 'undefined') {
-    window.nexusBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
+// 変数がまだ宣言されていない場合のみ安全に定義
+if (typeof currentBgmIndex === 'undefined') {
+    var currentBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
 }
-let isBgmUserPaused = false; 
+if (typeof isBgmUserPaused === 'undefined') {
+    var isBgmUserPaused = false;
+}
 
 // 🎵 指定した番号のBGMを再生するメイン関数
 function playBgmByIndex(index, forceRestart = false) {
@@ -4812,9 +4751,9 @@ function playBgmByIndex(index, forceRestart = false) {
     if (index >= customBgmList.length) index = 0; // BGM-9の次はBGM-1へループ
     if (index < 0) index = customBgmList.length - 1;
 
-    window.nexusBgmIndex = index;
-    localStorage.setItem('nexus_bgm_index', window.nexusBgmIndex);
-    const song = customBgmList[window.nexusBgmIndex];
+    currentBgmIndex = index;
+    localStorage.setItem('nexus_bgm_index', currentBgmIndex);
+    const song = customBgmList[currentBgmIndex];
 
     if (audioEl.src !== song.url || forceRestart) {
         audioEl.src = song.url;
@@ -4837,7 +4776,7 @@ function playBgmByIndex(index, forceRestart = false) {
 const audioElCheck = document.getElementById('bgm-audio');
 if (audioElCheck) {
     audioElCheck.onended = () => {
-        playBgmByIndex(window.nexusBgmIndex + 1, true);
+        playBgmByIndex(currentBgmIndex + 1, true);
     };
 }
 
@@ -4858,7 +4797,6 @@ window.addEventListener('click', () => {
         }
     }
 });
-
 // 🎵 楽曲リスト & 再生インデックス管理
 let currentSongIndex = 0;
 let currentTargetSongs = []; 
