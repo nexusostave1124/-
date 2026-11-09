@@ -4877,8 +4877,8 @@ function playDefaultSongOnLogin() {
 }
 
 setTimeout(initDynamicPlaylist, 500);
-</script>
-// 【追加するコード】すべて新しく貼り付けてOKです
+
+// 【追加するコード（修正版）】すべて新しく貼り付けてOKです
 function toggleBgmPlayState() {
     const audioEl = document.getElementById('bgm-audio');
     if (!audioEl) return;
@@ -4900,6 +4900,7 @@ updateBgmDisplayUI = function(title) {
     const st = document.getElementById('settings-bgm-status');
     if (st) st.innerText = `再生中: title(BGM-{currentBgmIndex + 1}/9)`;
 };
+</script>
 </body>
 </html>
 
