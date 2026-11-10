@@ -1260,8 +1260,11 @@ function getTitleBgKey() { return 'nexus_title_bg_images'; }
 function getAppIconKey() { return 'nexus_custom_app_icon'; }
 function getFullscreenSettingKey() { return 'nexus_fullscreen_setting'; }
 
-let userAlbum = JSON.parse(localStorage.getItem(getUserAlbumKey())) || [];
+l// 修正1: アルバムデータ読み込み時に undefined や不正なURLのデータを自動クレンジング（削除）する
+let userAlbum = (JSON.parse(localStorage.getItem(getUserAlbumKey())) || []).filter(item => item && item.url);
 let userSlideshowIds = JSON.parse(localStorage.getItem(getUserSlideshowKey())) || [];
+// スライドショーID側も有効なアルバムIDだけに絞り込む
+userSlideshowIds = userSlideshowIds.filter(id => userAlbum.some(img => img.id === id));
 let userGifts = JSON.parse(localStorage.getItem(getUserGiftsKey())) || [];
 let userAvatarUrl = localStorage.getItem(getUserAvatarKey()) || "";
 let globalNotices = JSON.parse(localStorage.getItem(getGlobalNoticesKey())) || [];
