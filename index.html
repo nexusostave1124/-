@@ -3339,17 +3339,34 @@ function promptUserLogin() {
             isAdmin = false;
             localStorage.setItem('nexus_is_admin', 'false');
         }
- currentUser = found;
+currentUser = found;
         localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
         
-        // 🔄 ログイン時にスプレッドシート（GAS）から最新データをクラウド同期する
-        if (typeof saveAndSyncGasUrl === 'function' && GAS_WEB_APP_URL) {
+        // 🔄 ログイン時にスプレッドシート（GAS）から最新データ（設定・メンバー）をクラウド同期する
+        if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL) {
             fetch(GAS_WEB_APP_URL)
                 .then(res => res.json())
                 .then(data => {
-                    if (data && data.members) {
-                        memberDatabase = data.members;
-                        saveMemberDb();
+                    if (data) {
+                        if (data.members) {
+                            memberDatabase = data.members;
+                            saveMemberDb();
+                        }
+                        // スプレッドシート側のクラウド設定（appSettings）があれば反映
+                        if (data.appSettings && Object.keys(data.appSettings).length > 0) {
+                            if (data.appSettings.eventsList) {
+                                eventsList = data.appSettings.eventsList;
+                                localStorage.setItem('nexus_events_list', JSON.stringify(eventsList));
+                            }
+                            if (data.appSettings.gachaList) {
+                                gachaList = data.appSettings.gachaList;
+                                localStorage.setItem('nexus_gacha_list', JSON.stringify(gachaList));
+                            }
+                            if (data.appSettings.shopItemsList) {
+                                shopItemsList = data.appSettings.shopItemsList;
+                                localStorage.setItem('nexus_shop_items', JSON.stringify(shopItemsList));
+                            }
+                        }
                         const freshUser = memberDatabase.find(m => m.id === currentUser.id);
                         if (freshUser) {
                             currentUser = freshUser;
@@ -4953,12 +4970,38 @@ function closeScreen(name) {
     }
 }
 
-function saveManageSettings() {
+async function saveManageSettings() {
     adminSaveEventConfig();
     adminSaveGachaConfig();
+    
+    // 🌐 クラウド（スプレッドシート）へ設定を完全同期・保存するデータ構造
+    const settingsPayload = {
+        eventsList: eventsList,
+        gachaList: gachaList,
+        shopItemsList: shopItemsList
+    };
+    
+    if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL) {
+        try {
+            await fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    logType: "saveSettings",
+                    settings: settingsPayload
+                })
+            });
+            console.log("☁️ スプレッドシートへの設定クラウド保存完了");
+        } catch (e) {
+            console.log("⚠️ クラウド保存エラー:", e);
+        }
+    }
+    
     closeScreen('manage');
-    alert("💾 管理画面のすべての設定を保存しました！");
+    alert("💾 管理画面のすべての設定を保存し、スプレッドシートへ同期しました！");
 }
+
 
 setTimeout(initDynamicPlaylist, 500);
 </script>
