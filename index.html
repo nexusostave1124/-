@@ -629,32 +629,33 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 </div>
 </div>
 
-<!-- 🎵 楽曲選択画面（プレイヤー画面） -->
+            <!-- 🎵 楽曲選択画面（プレイヤー画面） -->
 <div id="screen-player" class="sub-screen">
     <div class="sub-header">
         <span class="sub-title">🎵 楽曲選択 & プレイヤー</span>
         <button class="close-btn" onclick="closeScreen('player')">閉じる</button>
     </div>
     
-    <!-- 📌 再生中の曲名表示 -->
-    <div id="now-playing-text" style="color: #00f5d4; margin-bottom: 8px; font-weight: bold; text-align: center;">再生中の曲: なし</div>
+    <!-- 📌 再生中の曲名表示（固定） -->
+    <div id="now-playing-text" style="color: #00f5d4; margin-bottom: 8px; font-weight: bold; text-align: center; flex-shrink: 0;">再生中の曲: なし</div>
     
-    <!-- ⏭️ 前へ・次へ操作ボタン -->
-    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 12px;">
+    <!-- ⏭️ 前へ・次へ操作ボタン（固定） -->
+    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 12px; flex-shrink: 0;">
         <button onclick="playYouTubeSongByIndex(currentSongIndex - 1)" style="background: #222; color: #00f5d4; border: 1px solid #00f5d4; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.8rem;">◀ 前の曲</button>
         <button onclick="playYouTubeSongByIndex(currentSongIndex + 1)" style="background: #00f5d4; color: #000; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 0.8rem;">次の曲へ ▶</button>
     </div>
 
-    <!-- 🌟 YouTubeプレイヤー表示枠 -->
-    <div id="youtube-player-container" style="width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #00f5d4;">
+    <!-- 🌟 YouTubeプレイヤー表示枠（液晶部分：消えずに完全固定） -->
+    <div id="youtube-player-container" style="width: 100%; min-height: 180px; aspect-ratio: 16/9; background: #000; margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 1px solid #00f5d4; flex-shrink: 0;">
         <div id="yt-player-iframe-wrap" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#888; font-size:0.8rem;">
             曲を選ぶとここにプレイヤーが表示されます
         </div>
     </div>
     
-    <!-- 曲の一覧リスト -->
-    <div id="playlist"></div>
+    <!-- 🎵 曲の一覧リスト（このエリア内だけがスクロールするように修正） -->
+    <div id="playlist" style="flex: 1; overflow-y: auto; padding-bottom: 20px; min-height: 0;"></div>
 </div>
+
 
 <div id="screen-gacha" class="sub-screen">
 <div class="sub-header"><span class="sub-title" id="gacha-screen-title">🎂 ガチャ</span><button class="close-btn" onclick="closeScreen('gacha')">閉じる</button></div>
@@ -730,6 +731,20 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <div style="margin-bottom: 10px;">
 <label style="font-size:0.8rem; color:#aaa;">画面明るさ (端末連動):</label>
 <input type="range" min="20" max="100" value="100" class="admin-input" oninput="adjustBrightness(this.value)">
+</div>
+<div style="margin-bottom: 10px;">
+    <label style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:4px;">🎵 背景BGM選択:</label>
+    <select id="settings-bgm-select" class="admin-input" onchange="changeBgmFromSettings(this.value)">
+        <option value="0">BGM-1</option>
+        <option value="1">BGM-2</option>
+        <option value="2">BGM-3</option>
+        <option value="3">BGM-4</option>
+        <option value="4">BGM-5</option>
+        <option value="5">BGM-6</option>
+        <option value="6">BGM-7</option>
+        <option value="7">BGM-8</option>
+        <option value="8">BGM-9</option>
+    </select>
 </div>
 <div style="margin-bottom: 10px;">
 <label style="font-size:0.8rem; color:#ffee00; display:flex; align-items:center; gap:8px; cursor:pointer;">
@@ -2129,10 +2144,7 @@ if (n1 === n2 && n2 === n3) {
         else if (hitColor === "RED" && sData.highestMode !== "GOLD") sData.highestMode = "RED";
         else if (sData.highestMode === "NONE") sData.highestMode = "BLUE";
     }
-    
-    sData.inST = true;
-    sData.inJitan = false;
-    
+        
        sData.inST = true;
     sData.inJitan = false; // 大当り直後はSTからスタート
     
@@ -3306,73 +3318,84 @@ promptUserLogin();
 }
 }
 function promptUserLogin() {
-closeOtherMenu();
-const inputId = prompt("スプレッドシート登録の USER ID を入力してください：");
-if (!inputId) return;
-if (userRestrictionMap[inputId] === true) {
-alert("❌ このアカウントは管理者によりアクセス制限（凍結）されています。");
-return;
-}
-if (isLoginLocked && inputId !== "A-24-11-9-a") {
-alert("❌ 現在ログイン制限（メンテナンス中）につき、一般メンバーのログインはできません。");
-return;
-}
-const found = memberDatabase.find(m => m.id === inputId);
-if (found) {
-if (found.id === "A-24-11-9-a") {
-isAdmin = true;
-localStorage.setItem('nexus_is_admin', 'true');
-} else {
-isAdmin = false;
-localStorage.setItem('nexus_is_admin', 'false');
-}
-currentUser = found;
+    closeOtherMenu();
+    const inputId = prompt("スプレッドシート登録の USER ID を入力してください：");
+    if (!inputId) return;
+    if (userRestrictionMap[inputId] === true) {
+        alert("❌ このアカウントは管理者によりアクセス制限（凍結）されています。");
+        return;
+    }
+    if (isLoginLocked && inputId !== "A-24-11-9-a") {
+        alert("❌ 現在ログイン制限（メンテナンス中）につき、一般メンバーのログインはできません。");
+        return;
+    }
+    const found = memberDatabase.find(m => m.id === inputId);
+    if (found) {
+        if (found.id === "A-24-11-9-a") {
+            isAdmin = true;
+            localStorage.setItem('nexus_is_admin', 'true');
+        } else {
+            isAdmin = false;
+            localStorage.setItem('nexus_is_admin', 'false');
+        }
+        currentUser = found;
 localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
 reloadUserData();
-
-// 🔄 GASのAPI（画像 ＋ YouTubeプレイリスト曲）を非同期で一括取得する関数（CORS対応）
+// 🔄 確実にGASからデータを取得して反映させる非同期関数
 async function fetchGasAppContent() {
     try {
-        const res = await fetch(GAS_WEB_APP_URL, { mode: 'cors' });
+        const res = await fetch(GAS_WEB_APP_URL, { redirect: "follow", mode: "cors" });
         if (!res.ok) throw new Error("API通信エラー");
         const data = await res.json();
-        
-        // 1. 画像リストの反映（Googleドライブ画像）
-        if (data.images && Array.isArray(data.images)) {
-            dynamicImagesList = data.images;
-            // マスターデータに統合してアルバム等に反映
-            data.images.forEach(img => {
-                if (!masterDriveImages.some(existing => existing.url === img.url)) {
+
+        const fetchedImages = Array.isArray(data) ? data : (data.images || []);
+        if (fetchedImages.length > 0) {
+            dynamicImagesList = fetchedImages;
+            fetchedImages.forEach(img => {
+                if (img && img.url && !masterDriveImages.some(existing => existing.url === img.url)) {
                     masterDriveImages.push(img);
                 }
             });
             localStorage.setItem('nexus_master_gacha_images', JSON.stringify(masterDriveImages));
             populateAdminSelects();
+            populateSettingsAvatarSelect();
         }
-        
-        // 2. YouTube音声リストの反映
-        if (data.audio && Array.isArray(data.audio) && data.audio.length > 0) {
-            dynamicSongsList = data.audio.map(item => ({
-                title: item.title,
-                // YouTubeの動画IDから埋め込み音声/ストリーミング形式に変換
+        let rawAudioList = [];
+        if (Array.isArray(data)) {
+            rawAudioList = data.filter(i => i && i.youtubeId);
+        } else if (data.audio && Array.isArray(data.audio)) {
+            rawAudioList = data.audio;
+        } else if (data.youtube && Array.isArray(data.youtube)) {
+            rawAudioList = data.youtube;
+        } else {
+            const foundKey = Object.keys(data).find(k => Array.isArray(data[k]) && data[k].some(i => i && i.youtubeId));
+            if (foundKey) rawAudioList = data[foundKey];
+        }
+        if (rawAudioList.length > 0) {
+            dynamicSongsList = rawAudioList.map(item => ({
+                title: item.title || "無題の楽曲",
                 url: `https://www.youtube.com/watch?v=${item.youtubeId}`,
                 youtubeId: item.youtubeId,
-                id: item.id
+                id: item.id || ('yt_' + Math.random())
             }));
             initDynamicPlaylist();
         }
     } catch (e) {
-        console.log("GAS APIからのデータ取得に失敗しました（フォールバック使用）:", e);
+        console.log("GAS APIからのデータ取得に失敗:", e);
+        initDynamicPlaylist();
     }
 }
+fetchGasAppContent();
 
-alert(`🎉 ログイン成功！\nようこそ、${currentUser.name} さん`);
-playDefaultSongOnLogin();
-checkAndTriggerFullscreenOnLogin();
-if (isAdmin) openScreen('manage');
-} else {
-alert("❌ ログインエラー\n登録メンバーリストに存在しないIDです。");
-}
+
+
+        alert(`🎉 ログイン成功！\nようこそ、${currentUser.name} さん`);
+        playDefaultSongOnLogin();
+        checkAndTriggerFullscreenOnLogin();
+        if (isAdmin) openScreen('manage');
+    } else {
+        alert("❌ ログインエラー\n登録メンバーリストに存在しないIDです。");
+    }
 }
 
 function saveFullscreenSetting(checkbox) {
@@ -3413,13 +3436,6 @@ if (isFsOn) {
 requestFullscreenMode();
 }
 }
-// 🎵 ログイン直後にBGM-1を自動再生スタートする関数
-function playDefaultSongOnLogin() {
-    initDynamicPlaylist();
-    // ログインボタンを押した瞬間のユーザー操作の勢いを利用して、BGM-1の再生をキック！
-    playBgmByIndex(0);
-}
-
 function adminLogout() {
 isAdmin = false;
 localStorage.setItem('nexus_is_admin', 'false');
@@ -3427,7 +3443,8 @@ currentUser = null;
 localStorage.removeItem('nexus_current_user');
 reloadUserData();
 closeOtherMenu();
-if (audioPlayer) audioPlayer.pause();
+const audioEl = document.getElementById('bgm-audio');
+if (audioEl) audioEl.pause();
 alert("🔒 ログアウトしました。");
 }
 function reloadUserData() {
@@ -4578,59 +4595,63 @@ function closeOtherMenu() { document.getElementById('other-modal').classList.rem
 
 let openedFromTitle = false;
 function openScreen(name, fromTitle = false) {
-closeOtherMenu();
-closeAllSelectors();
-openedFromTitle = fromTitle;
+  closeOtherMenu();
+  closeAllSelectors();
+  openedFromTitle = fromTitle;
+  if (name === 'present') markAsViewed('present');
+  if (name === 'notice') markAsViewed('notice');
+  if (name === 'album') markAsViewed('album');
+  if (name === 'history') markAsViewed('history');
+  if (name === 'play') markAsViewed('play');
+  if (name === 'gacha') markAsViewed('gacha');
 
-if (name === 'present') markAsViewed('present');
-if (name === 'notice') markAsViewed('notice');
-if (name === 'album') markAsViewed('album');
-if (name === 'history') markAsViewed('history');
-if (name === 'play') markAsViewed('play');
-if (name === 'gacha') markAsViewed('gacha');
+  // 🎵 遊戯画面を開いたときはBGMを一時停止
+  const audioEl = document.getElementById('bgm-audio');
+  if (audioEl) {
+      if (name === 'play') {
+          audioEl.pause();
+      } else if (!audioEl.paused === false && !isBgmUserPaused && currentUser) {
+          audioEl.play().catch(() => {});
+      }
+  }
 
-const bottomNav = document.getElementById('main-bottom-nav');
-if (bottomNav) {
-bottomNav.classList.remove('hide-menu');
+  const bottomNav = document.getElementById('main-bottom-nav');
+  if (bottomNav) {
+    bottomNav.classList.remove('hide-menu');
+  }
+  if (name === 'event') renderEventScreen();
+  if (name === 'present') renderGifts();
+  if (name === 'notice') renderNotices();
+  if (name === 'history') renderHistory();
+  if (name === 'album') renderAlbum();
+  if (name === 'shop') renderShopScreen();
+  if (name === 'settings') {
+    const clockSection = document.getElementById('settings-clock-section');
+    const homeEx = document.getElementById('settings-home-exclusive');
+    const titleEx = document.getElementById('settings-title-exclusive');
+    if (fromTitle) {
+      if (titleEx) titleEx.style.display = 'block';
+      if (homeEx) homeEx.style.display = 'none';
+      if (clockSection) clockSection.style.display = 'none';
+    } else {
+      if (titleEx) titleEx.style.display = 'none';
+      if (homeEx) homeEx.style.display = currentUser ? 'block' : 'none';
+      if (clockSection) clockSection.style.display = currentUser ? 'block' : 'none';
+      populateSettingsAvatarSelect();
+      const nameInput = document.getElementById('settings-name-input');
+      if (nameInput && currentUser) nameInput.value = currentUser.name;
+      const fsCheckbox = document.getElementById('settings-fullscreen-toggle');
+      if (fsCheckbox) fsCheckbox.checked = localStorage.getItem(getFullscreenSettingKey()) === 'true';
+    }
+  }
+  document.querySelectorAll('.sub-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (name !== 'home' && document.getElementById('nav-' + name)) {
+    document.getElementById('nav-' + name).classList.add('active');
+  }
+  const target = document.getElementById('screen-' + name);
+  if (target) target.classList.add('active');
 }
-if (name === 'event') renderEventScreen();
-if (name === 'present') renderGifts();
-if (name === 'notice') renderNotices();
-if (name === 'history') renderHistory();
-if (name === 'album') renderAlbum();
-if (name === 'shop') renderShopScreen();
-if (name === 'settings') {
-const clockSection = document.getElementById('settings-clock-section');
-const homeEx = document.getElementById('settings-home-exclusive');
-const titleEx = document.getElementById('settings-title-exclusive');
-if (fromTitle) {
-if (titleEx) titleEx.style.display = 'block';
-if (homeEx) homeEx.style.display = 'none';
-if (clockSection) clockSection.style.display = 'none';
-} else {
-if (titleEx) titleEx.style.display = 'none';
-if (homeEx) homeEx.style.display = currentUser ? 'block' : 'none';
-if (clockSection) clockSection.style.display = currentUser ? 'block' : 'none';
-populateSettingsAvatarSelect();
-const nameInput = document.getElementById('settings-name-input');
-if (nameInput && currentUser) nameInput.value = currentUser.name;
-
-const fsCheckbox = document.getElementById('settings-fullscreen-toggle');
-if (fsCheckbox) fsCheckbox.checked = localStorage.getItem(getFullscreenSettingKey()) === 'true';
-}
-}
-document.querySelectorAll('.sub-screen').forEach(s => s.classList.remove('active'));
-document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-if (name !== 'home' && document.getElementById('nav-' + name)) {
-document.getElementById('nav-' + name).classList.add('active');
-}
-const target = document.getElementById('screen-' + name);
-if (target) target.classList.add('active');
-}
-function closeScreen(name) { 
-const screen = document.getElementById('screen-' + name);
-if (screen) screen.classList.remove('active'); 
 
 const bottomNav = document.getElementById('main-bottom-nav');
 if (bottomNav) bottomNav.classList.remove('hide-menu');
@@ -4640,7 +4661,6 @@ updateUIUserStatus();
 if (!currentUser || openedFromTitle) {
 document.getElementById('title-screen').classList.remove('hidden');
 openedFromTitle = false;
-}
 }
 function switchNav(name) {
 closeOtherMenu();
@@ -4652,8 +4672,11 @@ document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')
 if (name === 'home') document.getElementById('nav-home').classList.add('active');
 }
 function adjustVolume(val) {
-const vol = val / 100;
-if (audioPlayer) audioPlayer.volume = vol;
+    const vol = val / 100;
+    const audioEl = document.getElementById('bgm-audio');
+    if (audioEl) {
+        audioEl.volume = vol;
+    }
 }
 function adjustBrightness(val) {
 document.body.style.filter = `brightness(${val / 100})`;
@@ -4721,19 +4744,20 @@ window.location.reload();
 }
 }
 }
-// 🎵 9曲のBGMリスト（一番上の1箇所だけに絞る）
+// ==========================================
+// 🎵 9曲のBGMリスト（すべて大文字のBGM-1〜9に完全に修正）
+// ==========================================
 let customBgmList = JSON.parse(localStorage.getItem('nexus_custom_bgm_list')) || [
-    { title: "BGM-1", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-1.mp3" },
-    { title: "BGM-2", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-2.mp3" },
-    { title: "BGM-3", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/BGM-3.mp3" },
-    { title: "BGM-4", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-4.mp3" },
-    { title: "BGM-5", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-5.mp3" },
-    { title: "BGM-6", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-6.mp3" },
-    { title: "BGM-7", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-7.mp3" },
-    { title: "BGM-8", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-8.mp3" },
-    { title: "BGM-9", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus_-Ostave-for-ONLINE/main/Bgm-9.mp3" }
+    { title: "BGM-1", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-1.mp3" },
+    { title: "BGM-2", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-2.mp3" },
+    { title: "BGM-3", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-3.mp3" },
+    { title: "BGM-4", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-4.mp3" },
+    { title: "BGM-5", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-5.mp3" },
+    { title: "BGM-6", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-6.mp3" },
+    { title: "BGM-7", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-7.mp3" },
+    { title: "BGM-8", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-8.mp3" },
+    { title: "BGM-9", url: "https://raw.githubusercontent.com/nexusostave1124/Nexus-_-Ostave-for-ONLINE/main/BGM-9.mp3" }
 ];
-
 currentBgmIndex = Number(localStorage.getItem('nexus_bgm_index')) || 0;
 let isBgmUserPaused = false; 
 
@@ -4741,8 +4765,8 @@ let isBgmUserPaused = false;
 function playBgmByIndex(index, forceRestart = false) {
     if (!currentUser) return; // 未ログイン時は流さない
     const audioEl = document.getElementById('bgm-audio');
-    if (!audioEl) return;
-    if (index >= customBgmList.length) index = 0; // BGM-9の次はBGM-1へループ
+    if (audioEl) audioEl.pause();
+    if (index >= customBgmList.length) index = 0; // ループ
     if (index < 0) index = customBgmList.length - 1;
     currentBgmIndex = index;
     localStorage.setItem('nexus_bgm_index', currentBgmIndex);
@@ -4756,13 +4780,17 @@ function playBgmByIndex(index, forceRestart = false) {
     if (!isPlayScreenOpen && !isBgmUserPaused) {
         audioEl.play().then(() => {
             updateBgmDisplayUI(song.title);
+            updateSettingsBgmSelect();
         }).catch(e => {
             console.log("自動再生ガード（画面タップで再生されます）");
         });
     }
+    // 🎵 再生していなくてもタイトル表示は即座に合わせる
+    updateBgmDisplayUI(song.title);
+    updateSettingsBgmSelect();
 }
 
-// 🎵 1曲終わったら自動的に次の曲へ（BGM-9 ➔ BGM-1）
+// 🎵 1曲終わったら自動的に次の曲へ
 const audioElCheck = document.getElementById('bgm-audio');
 if (audioElCheck) {
     audioElCheck.onended = () => {
@@ -4776,14 +4804,27 @@ function updateBgmDisplayUI(title) {
     if (miniTitle) miniTitle.innerText = title;
 }
 
-// 🎵 画面のどこかをタップした時に「続きから」再生を復旧
+// 🎵 設定画面のセレクトボックスを現在の曲に合わせる
+function updateSettingsBgmSelect() {
+    const sel = document.getElementById('settings-bgm-select');
+    if (sel) sel.value = currentBgmIndex;
+}
+
+// 🎵 設定画面でBGMが変更されたとき
+function changeBgmFromSettings(index) {
+    playBgmByIndex(Number(index), true);
+}
+
+// 🎵 画面のどこかをタップした時に再生を復旧
 window.addEventListener('click', () => {
     const audioEl = document.getElementById('bgm-audio');
-    if (currentUser && audioEl && audioEl.paused && !isBgmUserPaused) {
+    if (currentUser && audioEl && !isBgmUserPaused) {
         const playScreen = document.getElementById('screen-play');
         const isPlayScreenOpen = playScreen && playScreen.classList.contains('active');
         if (!isPlayScreenOpen) {
-            audioEl.play().catch(e => {});
+            if (!audioEl.src || audioEl.paused) {
+                playBgmByIndex(currentBgmIndex);
+            }
         }
     }
 });
@@ -4793,7 +4834,6 @@ window.addEventListener('click', () => {
 // ==========================================
 let currentSongIndex = 0;
 let currentTargetSongs = []; 
-
 function initDynamicPlaylist() {
     const playlist = document.getElementById('playlist');
     const miniTitle = document.getElementById('mini-song-title');
@@ -4804,16 +4844,16 @@ function initDynamicPlaylist() {
     currentTargetSongs = (typeof dynamicSongsList !== 'undefined' && dynamicSongsList.length > 0) ? dynamicSongsList : [
         { title: "SPECIALZ", youtubeId: "8weM3t_zehw" },
         { title: "Chained Chase", youtubeId: "ZHmNZiQcU3I" },
-        { title: "どろん", youtubeId: "5kf0f31xUm0" },
+        { title: "どろん", youtubeId: "gc0_Acq8dV4" },
         { title: "千両役者", youtubeId: "T45MMgYtZaQ" },
         { title: "VIVID VICE", youtubeId: "9aCtVjFfb-U" },
         { title: "魂のルフラン", youtubeId: "Wl7IW7OiaHc" },
-        { title: "心よ原始に戻れ～2012Version～", youtubeId: "dnDCF4cb1qU" }
+        { title: "心よ原始に戻れ", youtubeId: "v2ztuPrwgks" }
     ];
     
     currentTargetSongs.forEach((song, index) => {
         const item = document.createElement('div');
-        item.style.cssText = "background:#1f1f1f; padding:12px 14px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; cursor:pointer; align-items:center;";
+        item.style.cssText = "background:#1f1f1f; padding:12px 14px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; cursor:pointer; align-items:center; flex-shrink:0;";
         item.innerHTML = `<span style="font-size:0.85rem;">▶ ${song.title}</span><span style="color:#00f5d4; font-size:0.80rem;">再生</span>`;
         
         item.onclick = () => {
@@ -4832,21 +4872,22 @@ function playYouTubeSongByIndex(index) {
     if (currentTargetSongs.length === 0) return;
     if (index >= currentTargetSongs.length) index = 0;
     if (index < 0) index = currentTargetSongs.length - 1;
-    
     currentSongIndex = index;
+
+    // 🎵 YouTube再生時は裏BGMを一時停止
+    const bgmAudio = document.getElementById('bgm-audio');
+    if (bgmAudio) bgmAudio.pause();
+
     const song = currentTargetSongs[currentSongIndex];
-    
     const miniTitle = document.getElementById('mini-song-title');
     const nowPlayingText = document.getElementById('now-playing-text');
     const wrap = document.getElementById('yt-player-iframe-wrap');
-    
     if (miniTitle) miniTitle.innerText = song.title;
     if (nowPlayingText) nowPlayingText.innerText = "再生中の曲: " + song.title;
-    
-    if (wrap) {
+    if (wrap && song && song.youtubeId) {
         wrap.innerHTML = `
             <iframe width="100%" height="100%" 
-                src="https://www.youtube-nocookie.com/embed/${song.youtubeId}?autoplay=1&playsinline=1" 
+                src="https://www.youtube-nocookie.com/embed/${song.youtubeId}?autoplay=1&playsinline=1&enablejsapi=1" 
                 title="${song.title}" 
                 frameborder="0" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
@@ -4857,6 +4898,8 @@ function playYouTubeSongByIndex(index) {
     }
 }
 
+
+// 🎵 ログイン成功時の統合処理（YouTube初期化 ＋ 裏BGM再生の確実な同期）
 function playDefaultSongOnLogin() {
     initDynamicPlaylist();
     if (currentTargetSongs.length > 0) {
@@ -4864,6 +4907,36 @@ function playDefaultSongOnLogin() {
         const miniTitle = document.getElementById('mini-song-title');
         if (miniTitle) miniTitle.innerText = currentTargetSongs[0].title;
     }
+    // 🎵 ログイン時は必ずBGM-1から再生を開始する
+    currentBgmIndex = 0;
+    localStorage.setItem('nexus_bgm_index', 0);
+    playBgmByIndex(0, true);
+}
+
+// ==========================================================
+// 🛠️ 修正・追加分: 全画面の閉じる処理 & 管理画面の保存処理
+// ==========================================================
+
+function closeScreen(name) { 
+    const screen = document.getElementById('screen-' + name);
+    if (screen) screen.classList.remove('active'); 
+    const bottomNav = document.getElementById('main-bottom-nav');
+    if (bottomNav) bottomNav.classList.remove('hide-menu');
+    if (name === 'settings') {
+        updateUIUserStatus();
+    }
+    if (!currentUser || openedFromTitle) {
+        const titleScreen = document.getElementById('title-screen');
+        if (titleScreen) titleScreen.classList.remove('hidden');
+        openedFromTitle = false;
+    }
+}
+
+function saveManageSettings() {
+    adminSaveEventConfig();
+    adminSaveGachaConfig();
+    closeScreen('manage');
+    alert("💾 管理画面のすべての設定を保存しました！");
 }
 
 setTimeout(initDynamicPlaylist, 500);
