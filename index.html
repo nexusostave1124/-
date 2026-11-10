@@ -1180,8 +1180,25 @@ let memberDatabase = JSON.parse(localStorage.getItem('nexus_member_db')) || [
 { id: "N-24-11-7-o", name: "Ayu", gem: 5000, coin: 0, pt: 0, gachaBonus: 0, illustBonus: 0, extraBonus: 0 },
 { id: "A-24-11-9-a", name: "ネオ", gem: 999999999, coin: 999999, pt: 0, gachaBonus: 0, illustBonus: 0, extraBonus: 0 }
 ];
-function saveMemberDb() {
-localStorage.setItem('nexus_member_db', JSON.stringify(memberDatabase));
+// 🔄 メンバーデータの保存 ＆ スプレッドシート（GAS）へのクラウド同期
+async function saveMemberDb() {
+    localStorage.setItem('nexus_member_db', JSON.stringify(memberDatabase));
+    
+    // GASのURLが設定されている場合はクラウド側にも即時同期
+    if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL) {
+        try {
+            await fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    logType: "saveMembers",
+                    members: memberDatabase
+                })
+            });
+        } catch (e) {
+            console.log("⚠️ メンバーデータのクラウド同期エラー:", e);
+        }
+    }
 }
 let currentUser = JSON.parse(localStorage.getItem('nexus_current_user')) || null;
 let isAdmin = localStorage.getItem('nexus_is_admin') === 'true';
@@ -3338,45 +3355,46 @@ function promptUserLogin() {
         } else {
             isAdmin = false;
             localStorage.setItem('nexus_is_admin', 'false');
-        }
-currentUser = found;
+        }currentUser = found;
         localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
         
-        // 🔄 ログイン時にスプレッドシート（GAS）から最新データ（設定・メンバー）をクラウド同期する
+        // 🔄 ログイン時にスプレッドシート（GAS）からすべての最新データを完全同期する
         if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL) {
-            fetch(GAS_WEB_APP_URL)
-                .then(res => res.json())
-                .then(data => {
-                    if (data) {
-                        if (data.members) {
-                            memberDatabase = data.members;
-                            saveMemberDb();
-                        }
-                        // スプレッドシート側のクラウド設定（appSettings）があれば反映
-                        if (data.appSettings && Object.keys(data.appSettings).length > 0) {
-                            if (data.appSettings.eventsList) {
-                                eventsList = data.appSettings.eventsList;
-                                localStorage.setItem('nexus_events_list', JSON.stringify(eventsList));
-                            }
-                            if (data.appSettings.gachaList) {
-                                gachaList = data.appSettings.gachaList;
-                                localStorage.setItem('nexus_gacha_list', JSON.stringify(gachaList));
-                            }
-                            if (data.appSettings.shopItemsList) {
-                                shopItemsList = data.appSettings.shopItemsList;
-                                localStorage.setItem('nexus_shop_items', JSON.stringify(shopItemsList));
-                            }
-                        }
-                        const freshUser = memberDatabase.find(m => m.id === currentUser.id);
-                        if (freshUser) {
-                            currentUser = freshUser;
-                            localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
-                        }
-                        updateUIUserStatus();
+            try {
+                const res = await fetch(GAS_WEB_APP_URL);
+                const data = await res.json();
+                if (data) {
+                    if (data.members) {
+                        memberDatabase = data.members;
+                        localStorage.setItem('nexus_member_db', JSON.stringify(memberDatabase));
                     }
-                })
-                .catch(e => console.log("クラウド同期スキップ:", e));
+                    // イベントやガチャ、ショップのクラウド設定を全体反映
+                    if (data.appSettings) {
+                        if (data.appSettings.eventsList) {
+                            eventsList = data.appSettings.eventsList;
+                            localStorage.setItem('nexus_events_list', JSON.stringify(eventsList));
+                        }
+                        if (data.appSettings.gachaList) {
+                            gachaList = data.appSettings.gachaList;
+                            localStorage.setItem('nexus_gacha_list', JSON.stringify(gachaList));
+                        }
+                        if (data.appSettings.shopItemsList) {
+                            shopItemsList = data.appSettings.shopItemsList;
+                            localStorage.setItem('nexus_shop_items', JSON.stringify(shopItemsList));
+                        }
+                    }
+                    const freshUser = memberDatabase.find(m => m.id === currentUser.id);
+                    if (freshUser) {
+                        currentUser = freshUser;
+                        localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
+                    }
+                    updateUIUserStatus();
+                }
+            } catch (e) {
+                console.log("⚠️ クラウドからのデータ取得に失敗しました（ローカルデータで動作します）:", e);
+            }
         }
+
         
         reloadUserData();
 // 🔄 確実にGASからデータを取得して反映させる非同期関数
@@ -4972,15 +4990,21 @@ async function saveManageSettings() {
     adminSaveEventConfig();
     adminSaveGachaConfig();
     
+    // ローカルストレージにも最新状態を保存
+    localStorage.setItem('nexus_events_list', JSON.stringify(eventsList));
+    localStorage.setItem('nexus_gacha_list', JSON.stringify(gachaList));
+    localStorage.setItem('nexus_shop_items', JSON.stringify(shopItemsList));
+    
     const settingsPayload = {
         eventsList: eventsList,
         gachaList: gachaList,
-        shopItemsList: shopItemsList
+        shopItemsList: shopItemsList,
+        members: memberDatabase
     };
     
     if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL) {
         try {
-            // mode: "no-cors" を削除し、通常のPOSTリクエストにする
+            alert("🔄 クラウド（スプレッドシート）へデータを同期中...");
             await fetch(GAS_WEB_APP_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -4989,14 +5013,15 @@ async function saveManageSettings() {
                     settings: settingsPayload
                 })
             });
-            alert("💾 管理画面の設定を保存し、スプレッドシートへ同期しました！");
+            alert("💾 すべての設定・データをクラウド上で完全に同期・保存しました！");
         } catch (e) {
             console.log("⚠️ クラウド保存エラー:", e);
-            alert("⚠️ クラウドへの保存に失敗しました。");
+            alert("⚠️ ネットワークエラーのため、ローカルのみ保存しました。");
         }
     }
     closeScreen('manage');
 }
+
 
 setTimeout(initDynamicPlaylist, 500);
 </script>
