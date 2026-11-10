@@ -4141,14 +4141,12 @@ async function pullGacha(count) {
 
     // ダイヤ残高チェック
     if (!currentUser || Number(currentUser.gem || 0) < totalCost) {
-        alert("💎 ダイヤが足りにゃいよ！");
+        alert("💎 ダイヤが足りないよ！");
         return;
     }
 
     // ダイヤを消費
-    currentUser.gem = Number(currentUser.gem) - totalCost;
-    if (typeof saveUserData === 'function') saveUserData();
-    renderGachaScreen(); // ダイヤ表示更新
+    currentUser.gem = Number(currentUser.gem) - totalCost; saveMemberDb(); // メンバーデータベースとローカルストレージに保存 renderGachaScreen(); // ダイヤ表示更新 
 
     // 🎲 確率に基づいて結果を事前計算
     const results = [];
