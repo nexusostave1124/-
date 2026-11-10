@@ -3335,7 +3335,7 @@ adminLogout();
 promptUserLogin();
 }
 }
-function promptUserLogin() {
+async function promptUserLogin() {
     closeOtherMenu();
     const inputId = prompt("スプレッドシート登録の USER ID を入力してください：");
     if (!inputId) return;
