@@ -3355,10 +3355,11 @@ async function promptUserLogin() {
         } else {
             isAdmin = false;
             localStorage.setItem('nexus_is_admin', 'false');
-        }currentUser = found;
+        }
+        currentUser = found;
         localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
         
-        // 🔄 ログイン時にスプレッドシート（GAS）からすべての最新データを完全同期する
+        // 🔄 ログイン時にスプレッドシート（GAS）から最新データ（設定・メンバー）をクラウド同期する
         if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL) {
             try {
                 const res = await fetch(GAS_WEB_APP_URL);
@@ -3366,10 +3367,10 @@ async function promptUserLogin() {
                 if (data) {
                     if (data.members) {
                         memberDatabase = data.members;
-                        localStorage.setItem('nexus_member_db', JSON.stringify(memberDatabase));
+                        saveMemberDb();
                     }
-                    // イベントやガチャ、ショップのクラウド設定を全体反映
-                    if (data.appSettings) {
+                    // スプレッドシート側のクラウド設定（appSettings）があれば反映
+                    if (data.appSettings && Object.keys(data.appSettings).length > 0) {
                         if (data.appSettings.eventsList) {
                             eventsList = data.appSettings.eventsList;
                             localStorage.setItem('nexus_events_list', JSON.stringify(eventsList));
@@ -3391,60 +3392,57 @@ async function promptUserLogin() {
                     updateUIUserStatus();
                 }
             } catch (e) {
-                console.log("⚠️ クラウドからのデータ取得に失敗しました（ローカルデータで動作します）:", e);
+                console.log("クラウド同期スキップ:", e);
             }
         }
-
         
         reloadUserData();
-// 🔄 確実にGASからデータを取得して反映させる非同期関数
-async function fetchGasAppContent() {
-    try {
-        const res = await fetch(GAS_WEB_APP_URL, { redirect: "follow", mode: "cors" });
-        if (!res.ok) throw new Error("API通信エラー");
-        const data = await res.json();
 
-        const fetchedImages = Array.isArray(data) ? data : (data.images || []);
-        if (fetchedImages.length > 0) {
-            dynamicImagesList = fetchedImages;
-            fetchedImages.forEach(img => {
-                if (img && img.url && !masterDriveImages.some(existing => existing.url === img.url)) {
-                    masterDriveImages.push(img);
+        // 🔄 確実にGASからデータを取得して反映させる非同期関数
+        async function fetchGasAppContent() {
+            try {
+                const res = await fetch(GAS_WEB_APP_URL, { redirect: "follow", mode: "cors" });
+                if (!res.ok) throw new Error("API通信エラー");
+                const data = await res.json();
+                const fetchedImages = Array.isArray(data) ? data : (data.images || []);
+                if (fetchedImages.length > 0) {
+                    dynamicImagesList = fetchedImages;
+                    fetchedImages.forEach(img => {
+                        if (img && img.url && !masterDriveImages.some(existing => existing.url === img.url)) {
+                            masterDriveImages.push(img);
+                        }
+                    });
+                    localStorage.setItem('nexus_master_gacha_images', JSON.stringify(masterDriveImages));
+                    populateAdminSelects();
+                    populateSettingsAvatarSelect();
                 }
-            });
-            localStorage.setItem('nexus_master_gacha_images', JSON.stringify(masterDriveImages));
-            populateAdminSelects();
-            populateSettingsAvatarSelect();
+                let rawAudioList = [];
+                if (Array.isArray(data)) {
+                    rawAudioList = data.filter(i => i && i.youtubeId);
+                } else if (data.audio && Array.isArray(data.audio)) {
+                    rawAudioList = data.audio;
+                } else if (data.youtube && Array.isArray(data.youtube)) {
+                    rawAudioList = data.youtube;
+                } else {
+                    const foundKey = Object.keys(data).find(k => Array.isArray(data[k]) && data[k].some(i => i && i.youtubeId));
+                    if (foundKey) rawAudioList = data[foundKey];
+                }
+                if (rawAudioList.length > 0) {
+                    dynamicSongsList = rawAudioList.map(item => ({
+                        title: item.title || "無題の楽曲",
+                        url: `https://www.youtube.com/watch?v=${item.youtubeId}`,
+                        youtubeId: item.youtubeId,
+                        id: item.id || ('yt_' + Math.random())
+                    }));
+                    initDynamicPlaylist();
+                }
+            } catch (e) {
+                console.log("GAS APIからのデータ取得に失敗:", e);
+                initDynamicPlaylist();
+            }
         }
-        let rawAudioList = [];
-        if (Array.isArray(data)) {
-            rawAudioList = data.filter(i => i && i.youtubeId);
-        } else if (data.audio && Array.isArray(data.audio)) {
-            rawAudioList = data.audio;
-        } else if (data.youtube && Array.isArray(data.youtube)) {
-            rawAudioList = data.youtube;
-        } else {
-            const foundKey = Object.keys(data).find(k => Array.isArray(data[k]) && data[k].some(i => i && i.youtubeId));
-            if (foundKey) rawAudioList = data[foundKey];
-        }
-        if (rawAudioList.length > 0) {
-            dynamicSongsList = rawAudioList.map(item => ({
-                title: item.title || "無題の楽曲",
-                url: `https://www.youtube.com/watch?v=${item.youtubeId}`,
-                youtubeId: item.youtubeId,
-                id: item.id || ('yt_' + Math.random())
-            }));
-            initDynamicPlaylist();
-        }
-    } catch (e) {
-        console.log("GAS APIからのデータ取得に失敗:", e);
-        initDynamicPlaylist();
-    }
-}
-fetchGasAppContent();
-
-
-
+        fetchGasAppContent();
+        
         alert(`🎉 ログイン成功！\nようこそ、${currentUser.name} さん`);
         playDefaultSongOnLogin();
         checkAndTriggerFullscreenOnLogin();
@@ -3453,6 +3451,7 @@ fetchGasAppContent();
         alert("❌ ログインエラー\n登録メンバーリストに存在しないIDです。");
     }
 }
+
 
 function saveFullscreenSetting(checkbox) {
 localStorage.setItem(getFullscreenSettingKey(), checkbox.checked ? 'true' : 'false');
