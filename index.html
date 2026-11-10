@@ -1260,10 +1260,8 @@ function getTitleBgKey() { return 'nexus_title_bg_images'; }
 function getAppIconKey() { return 'nexus_custom_app_icon'; }
 function getFullscreenSettingKey() { return 'nexus_fullscreen_setting'; }
 
-l// 修正1: アルバムデータ読み込み時に undefined や不正なURLのデータを自動クレンジング（削除）する
 let userAlbum = (JSON.parse(localStorage.getItem(getUserAlbumKey())) || []).filter(item => item && item.url);
 let userSlideshowIds = JSON.parse(localStorage.getItem(getUserSlideshowKey())) || [];
-// スライドショーID側も有効なアルバムIDだけに絞り込む
 userSlideshowIds = userSlideshowIds.filter(id => userAlbum.some(img => img.id === id));
 let userGifts = JSON.parse(localStorage.getItem(getUserGiftsKey())) || [];
 let userAvatarUrl = localStorage.getItem(getUserAvatarKey()) || "";
@@ -3341,9 +3339,29 @@ function promptUserLogin() {
             isAdmin = false;
             localStorage.setItem('nexus_is_admin', 'false');
         }
-        currentUser = found;
-localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
-reloadUserData();
+ currentUser = found;
+        localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
+        
+        // 🔄 ログイン時にスプレッドシート（GAS）から最新データをクラウド同期する
+        if (typeof saveAndSyncGasUrl === 'function' && GAS_WEB_APP_URL) {
+            fetch(GAS_WEB_APP_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.members) {
+                        memberDatabase = data.members;
+                        saveMemberDb();
+                        const freshUser = memberDatabase.find(m => m.id === currentUser.id);
+                        if (freshUser) {
+                            currentUser = freshUser;
+                            localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
+                        }
+                        updateUIUserStatus();
+                    }
+                })
+                .catch(e => console.log("クラウド同期スキップ:", e));
+        }
+        
+        reloadUserData();
 // 🔄 確実にGASからデータを取得して反映させる非同期関数
 async function fetchGasAppContent() {
     try {
