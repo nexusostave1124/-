@@ -4972,7 +4972,6 @@ async function saveManageSettings() {
     adminSaveEventConfig();
     adminSaveGachaConfig();
     
-    // 🌐 クラウド（スプレッドシート）へ設定を完全同期・保存するデータ構造
     const settingsPayload = {
         eventsList: eventsList,
         gachaList: gachaList,
@@ -4981,25 +4980,23 @@ async function saveManageSettings() {
     
     if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL) {
         try {
+            // mode: "no-cors" を削除し、通常のPOSTリクエストにする
             await fetch(GAS_WEB_APP_URL, {
                 method: "POST",
-                mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     logType: "saveSettings",
                     settings: settingsPayload
                 })
             });
-            console.log("☁️ スプレッドシートへの設定クラウド保存完了");
+            alert("💾 管理画面の設定を保存し、スプレッドシートへ同期しました！");
         } catch (e) {
             console.log("⚠️ クラウド保存エラー:", e);
+            alert("⚠️ クラウドへの保存に失敗しました。");
         }
     }
-    
     closeScreen('manage');
-    alert("💾 管理画面のすべての設定を保存し、スプレッドシートへ同期しました！");
 }
-
 
 setTimeout(initDynamicPlaylist, 500);
 </script>
