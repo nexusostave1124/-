@@ -5435,6 +5435,26 @@ function playDefaultSongOnLogin() {
     localStorage.setItem('nexus_bgm_index', 0);
     playBgmByIndex(0, true);
 }
+// 1. ガチャ排出率モーダルの開閉
+function toggleGachaRateModal() {
+    const modal = document.getElementById('gacha-rate-popup-modal');
+    if (!modal) return;
+    modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+}
+
+// 2. 管理画面のGAS同期データ表示
+function renderAdminGasDataView() {
+    const container = document.getElementById('admin-gas-fetched-data-container');
+    if (!container) return;
+    container.innerHTML = `
+        <div style="color:#00f5d4; font-weight:bold; margin-bottom:4px;">🖼️ ドライブ画像: ${masterDriveImages.length}件</div>
+        <div style="color:#ffee00; font-weight:bold; margin-bottom:6px;">🎵 YouTube楽曲: ${dynamicSongsList.length}件</div>
+        <div style="font-size:0.75rem; color:#ccc;">
+            ${masterDriveImages.map(img => `・${img.name}`).join('<br>') || '画像データなし'}
+        </div>
+    `;
+}
+
 
 // ==========================================================
 // 🛠️ 修正・追加分: 全画面の閉じる処理 & 管理画面の保存処理
