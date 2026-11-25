@@ -4955,13 +4955,6 @@ function saveGachaResultsToAlbum(results) {
     }
 }
 
-    // ローカルストレージ＆サーバーデータ同期
-    saveUserDataToLocal();
-    if (typeof syncUserDataToServer === 'function') {
-        syncUserDataToServer();
-    }
-}
-
 // 🖼️ アルバム画像の全体拡大表示 ＆ ダウンロードモーダル
 function openAlbumImageViewer(url, name, rarity, rarityNum) {
     let viewer = document.getElementById('album-image-viewer');
