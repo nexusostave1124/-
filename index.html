@@ -545,6 +545,17 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
     border-radius: 50%;
     animation: spinSyncLoader 0.8s linear infinite;
 }
+/* 👇 ここから追加 */
+@keyframes orbShake {
+    0%, 100% { transform: translate(0, 0) scale(1.15); }
+    20% { transform: translate(-6px, 4px) scale(1.15); }
+    40% { transform: translate(6px, -4px) scale(1.15); }
+    60% { transform: translate(-5px, -5px) scale(1.15); }
+    80% { transform: translate(5px, 5px) scale(1.15); }
+}
+.orb-shaking {
+    animation: orbShake 0.12s infinite linear;
+}
 @keyframes spinSyncLoader {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -584,8 +595,7 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <div class="overlay-bottom"></div>
 <div class="user-status" onclick="handleStatusClick()" title="ステータス / ログアウト">
 <div class="avatar-box" id="main-avatar-box">
-<img src="https://lh3.googleusercontent.com/d/1YtGWHatFhksmeWvKYTPAwClMaGQdrZlm
-" alt="アイコン" id="main-avatar-img">
+<img src="https://lh3.googleusercontent.com/d/1YtGWHatFhksmeWvKYTPAwClMaGQdrZlm" alt="アイコン" id="main-avatar-img">
 </div>
 <div class="status-info">
 <div class="status-row"><span class="status-label">ID</span> <span id="display-id" class="status-val">未ログイン</span></div>
@@ -695,8 +705,7 @@ padding: 30px 20px; text-align: center; z-index: 20; width: 85%; max-width: 320p
 <div class="overlay-bottom"></div>
 <div class="event-user-status">
 <div class="event-avatar-box">
-<img src="https://lh3.googleusercontent.com/d/1YtGWHatFhksmeWvKYTPAwClMaGQdrZlm
-" id="event-avatar-img">
+<img src="https://lh3.googleusercontent.com/d/1YtGWHatFhksmeWvKYTPAwClMaGQdrZlm" id="event-avatar-img">
 </div>
 <div class="event-status-info">
 <div class="event-status-row"><span style="color:#aaa; font-size:0.75rem;">獲得P</span> <span id="event-user-pt" class="event-pt-val">0</span></div>
@@ -1606,6 +1615,16 @@ renderEventScreen();
 renderGachaScreen();
 }
 }
+function toggleGachaRateModal() {
+    const modal = document.getElementById('gacha-rate-popup-modal');
+    if (!modal) return;
+    if (modal.style.display === 'flex') {
+        modal.style.display = 'none';
+    } else {
+        modal.style.display = 'flex';
+    }
+}
+
 function forceStopMinigamesOnEnd() {
 const mgModal = document.getElementById('minigame-modal');
 if (mgModal && mgModal.classList.contains('active')) {
@@ -2741,6 +2760,37 @@ alert("❌ 接続に失敗しました。URLを確認してください。");
 alert("⚠️ CORS制限またはURLエラーのため直接同期できませんでした。ローカルストレージで動作継続します。");
 }
 }
+async function renderAdminGasDataView() {
+    const container = document.getElementById('admin-gas-fetched-data-container');
+    if (!container) return;
+    container.innerHTML = `<span style="color:#00f5d4;">🔄 GASから最新データを取得中...</span>`;
+    
+    await fetchGasAppContent();
+    
+    let html = `<div style="margin-bottom:8px; color:#ffee00; font-weight:bold;">🖼️ 取得済みドライブ画像 (${masterDriveImages.length}件)</div>`;
+    if (masterDriveImages.length === 0) {
+        html += `<div style="color:#888; margin-bottom:10px;">画像データがありません</div>`;
+    } else {
+        html += `<div style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">`;
+        masterDriveImages.forEach(img => {
+            html += `<div style="background:#181818; padding:4px 8px; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">・${img.name}</div>`;
+        });
+        html += `</div>`;
+    }
+    
+    html += `<div style="margin-bottom:8px; color:#00f5d4; font-weight:bold;">🎵 取得済みYouTube楽曲 (${dynamicSongsList.length}件)</div>`;
+    if (dynamicSongsList.length === 0) {
+        html += `<div style="color:#888;">楽曲データがありません（デフォルトリスト使用中）</div>`;
+    } else {
+        html += `<div style="display:flex; flex-direction:column; gap:4px;">`;
+        dynamicSongsList.forEach(song => {
+            html += `<div style="background:#181818; padding:4px 8px; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">・song.title({song.youtubeId})</div>`;
+        });
+        html += `</div>`;
+    }
+    
+    container.innerHTML = html;
+}
 
 function toggleShopImgInputType() {
 const type = document.getElementById('admin-shop-img-type').value;
@@ -3504,35 +3554,33 @@ function renderGachaScreen() {
             </div>
         </div>
 
-        <!-- 下部エリア (左下: タイトルなし独立小枠 ＆ 右下: ボタン) -->
-        <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-bottom: 5px;">
+               <!-- 下部エリア (左下: タイトル画像 ＆ 右下: 1回引く・10回引くボタン) -->
+        <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-bottom: 5px; gap: 8px;">
             
-            <!-- 左下: 期間 ＆ 管理画面で独立設定した小枠画像（タイトル表記なし） -->
-            <div style="display: flex; flex-direction: column; gap: 4px; width: 52%;">
+            <!-- 左下: 種類・期間 ＆ タイトル画像 -->
+            <div style="display: flex; flex-direction: column; gap: 4px; width: 55%;">
                 <span style="background: #28a745; color: #fff; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; width: fit-content;">${currentGachaConfig.type}</span>
                 <div style="font-size: 0.65rem; color: #eee; text-shadow: 1px 1px 2px #000;">${formatDateStr(currentGachaConfig.startDate)}〜${formatDateStr(currentGachaConfig.endDate)}</div>
                 
-                <div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; padding: 4px; backdrop-filter: blur(4px);">
-    ${subBoxImgUrl 
-        ? `<div style="width: 100%; height: 60px; background-image: url('${subBoxImgUrl}'); background-size: cover; background-position: center; border-radius: 6px;"></div>`
-        : `<div style="width: 100%; height: 60px; display:flex; align-items:center; justify-content:center; color:#888; font-size:0.75rem;">${currentGachaConfig.title}</div>`
-    }
-</div>
-             </div>
+                <div style="background: rgba(20,20,20,0.85); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 4px; backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.6);">
+                    ${subBoxImgUrl 
+                        ? `<img src="${subBoxImgUrl}" alt="ガチャタイトル" style="width: 100%; height: auto; max-height: 85px; object-fit: contain; border-radius: 6px; display: block;">`
+                        : `<div style="width: 100%; height: 60px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:0.85rem; text-align:center; padding:4px;">${currentGachaConfig.title}</div>`
+                    }
+                </div>
             </div>
 
-            <!-- 右下: 引くボタン -->
-            <div style="display: flex; flex-direction: column; gap: 6px; width: 42%;">
-                <button onclick="pullGacha(1)" style="background: linear-gradient(135deg, #00f5d4, #0088cc); color: #000; border: none; border-radius: 8px; padding: 8px 6px; text-align: center; cursor: pointer; font-family:inherit; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
-                    <div style="font-size: 0.8rem; font-weight: 800;">1回引く</div>
-                    <div style="font-size: 0.7rem; color: #111; font-weight: bold;">💎 ${costSingle.toLocaleString()}</div>
+            <!-- 右下: 1回引く・10回引くボタン -->
+            <div style="display: flex; flex-direction: column; gap: 8px; width: 42%;">
+                <button onclick="pullGacha(1)" style="background: linear-gradient(135deg, #00f5d4, #0088cc); color: #000; border: 1px solid rgba(255,255,255,0.5); border-radius: 10px; padding: 8px 6px; text-align: center; cursor: pointer; font-family:inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                    <div style="font-size: 0.85rem; font-weight: 800;">1回引く</div>
+                    <div style="font-size: 0.75rem; color: #111; font-weight: bold;">💎 ${costSingle.toLocaleString()}</div>
                 </button>
-                <button onclick="pullGacha(10)" style="background: linear-gradient(135deg, #ffee00, #ff9900); color: #000; border: none; border-radius: 8px; padding: 8px 6px; text-align: center; cursor: pointer; font-family:inherit; box-shadow: 0 3px 8px rgba(0,0,0,0.4);">
-                    <div style="font-size: 0.8rem; font-weight: 800;">10回引く</div>
-                    <div style="font-size: 0.7rem; color: #111; font-weight: bold;">💎 ${costMulti.toLocaleString()}</div>
+                <button onclick="pullGacha(10)" style="background: linear-gradient(135deg, #ffee00, #ff9900); color: #000; border: 1px solid rgba(255,255,255,0.5); border-radius: 10px; padding: 8px 6px; text-align: center; cursor: pointer; font-family:inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                    <div style="font-size: 0.85rem; font-weight: 800;">10回引く</div>
+                    <div style="font-size: 0.75rem; color: #111; font-weight: bold;">💎 ${costMulti.toLocaleString()}</div>
                 </button>
             </div>
-
         </div>
 
         <!-- ︙メニューモーダル (排出率 ＋ チェックされた★4〜6スライドショー対象一覧) -->
@@ -3546,16 +3594,31 @@ function renderGachaScreen() {
                     <tbody><tr><td>${rates["★6"]}%</td><td>${rates["★5"]}%</td><td>${rates["★4"]}%</td><td>${rates["★3"]}%</td><td>${rates["★2"]}%</td></tr></tbody>
                 </table>
 
-                <!-- チェックが入った★4〜6スライドショー対象アイテムの表示エリア -->
+      <!-- ピックアップ対象一覧 (★4〜★6) -->
                 <div style="font-size: 0.8rem; font-weight: bold; color: #ffcc00; margin-bottom: 6px;">✨ ピックアップ対象一覧 (★4〜★6)</div>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 15px;">
-                    ${Array.isArray(currentGachaConfig.rarityBanners) ? currentGachaConfig.rarityBanners.filter(item => item.checked && item.url).map(item => `
-                        <div style="background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 6px; padding: 4px; text-align: center;">
-                            <div style="width: 100%; height: 50px; background-image: url('${item.url}'); background-size: cover; background-position: center; border-radius: 4px; margin-bottom: 2px;"></div>
-                            <span style="font-size: 0.65rem; color: #fff; background: #333; padding: 1px 4px; border-radius: 3px;">${item.rarity || 'ピックアップ'}</span>
-                        </div>
-                    `).join('') : '<p style="font-size: 0.75rem; color: #aaa; text-align: center; grid-column: span 3;">対象アイテムがありません</p>'}
+                    ${(() => {
+                        const pickupItems = masterDriveImages.filter(item => 
+                            item && item.url && (
+                                item.rarity === "★6" || item.rarity === "★5" || item.rarity === "★4" ||
+                                (!item.rarity && item.name && (item.name.includes("★6") || item.name.includes("★5") || item.name.includes("★4")))
+                            )
+                        );
+                        if (pickupItems.length === 0) {
+                            return '<p style="font-size: 0.75rem; color: #aaa; text-align: center; grid-column: span 3;">対象アイテムがありません</p>';
+                        }
+                        return pickupItems.map(item => {
+                            const rarLabel = item.rarity || (item.name.includes("★6") ? "★6" : item.name.includes("★5") ? "★5" : "★4");
+                            return `
+                                <div style="background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 6px; padding: 4px; text-align: center;">
+                                    <div style="width: 100%; height: 50px; background-image: url('${item.url}'); background-size: cover; background-position: center; border-radius: 4px; margin-bottom: 2px;"></div>
+                                    <span style="font-size: 0.65rem; color: #fff; background: #333; padding: 1px 4px; border-radius: 3px;">${rarLabel}</span>
+                                </div>
+                            `;
+                        }).join('');
+                    })()}
                 </div>
+
 
                 <button onclick="toggleGachaRateModal()" style="width: 100%; background: #00f5d4; color: #000; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">閉じる</button>
             </div>
@@ -3632,7 +3695,7 @@ async function promptUserLogin() {
             isAdmin = false;
             localStorage.setItem('nexus_is_admin', 'false');
         }
-             currentUser = found;
+        currentUser = found;
         localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
         
         // 🌐 ログイン時にスプレッドシートから最新データ・アイコン・通貨・個別データを確実に受信・反映
@@ -3671,7 +3734,6 @@ async function promptUserLogin() {
                                 localStorage.setItem('nexus_current_user', JSON.stringify(currentUser));
                             }
                         }
-
                         // ② 管理画面設定・イベント・ガチャ・P情報の反映（J1セル）
                         const settings = data.settings || data.appSettings;
                         if (settings) {
@@ -3729,7 +3791,6 @@ async function promptUserLogin() {
                                 });
                             }
                         }
-
                         // ③ ログインユーザー個別データの復元（K1セル）
                         if (data.allPersonalData && data.allPersonalData[currentUser.id]) {
                             const pData = data.allPersonalData[currentUser.id];
@@ -3750,16 +3811,18 @@ async function promptUserLogin() {
                                 applyClockColorToAll(pData.clockColor);
                             }
                         }
-
                         localStorage.setItem('nexus_member_db', JSON.stringify(memberDatabase));
                     }
                 }
-          } catch (e) {
+            } catch (e) {
                 console.log("⚠️ ログイン時の一時的なオフライン同期フォールバック:", e);
+            } finally {
+                hideSyncLoader();
             }
         }
         reloadUserData();
         fetchGasAppContent();
+        
         playDefaultSongOnLogin();
         checkAndTriggerFullscreenOnLogin();
         
@@ -3769,7 +3832,8 @@ async function promptUserLogin() {
         alert("❌ ログインエラー\n登録メンバーリストに存在しないIDです。");
     }
 }
-        
+
+
 // ==========================================
 // 🌐 GASから画像・YouTube楽曲データを取得するグローバル関数
 // ==========================================
@@ -3851,12 +3915,11 @@ async function fetchGasAppContent() {
                 console.log("✅ YouTube楽曲プレイリストを反映しました:", dynamicSongsList.length);
             }
         }
-    } catch (e) {
+       } catch (e) {
         console.error("⚠️ 画像・楽曲用GAS APIからのデータ取得・解析エラー:", e);
         if (typeof initDynamicPlaylist === 'function') initDynamicPlaylist(); // フォールバック
     }
 }
-        fetchGasAppContent();
 
 function saveFullscreenSetting(checkbox) {
 localStorage.setItem(getFullscreenSettingKey(), checkbox.checked ? 'true' : 'false');
@@ -3867,26 +3930,23 @@ exitFullscreenMode();
 }
 }
 function requestFullscreenMode() {
-try {
-if (document.documentElement.requestFullscreen) {
-document.documentElement.requestFullscreen();
-} else if (document.documentElement.webkitRequestFullscreen) {
-document.documentElement.webkitRequestFullscreen();
+    try {
+        const el = document.documentElement;
+        const p = el.requestFullscreen ? el.requestFullscreen() : (el.webkitRequestFullscreen ? el.webkitRequestFullscreen() : null);
+        if (p && typeof p.catch === 'function') {
+            p.catch(() => {}); // ブラウザの自動全画面ブロック時はエラーを出さずスキップ
+        }
+    } catch (e) {}
 }
-} catch (e) {
-console.log("Fullscreen request error:", e);
-}
-}
+
 function exitFullscreenMode() {
-try {
-if (document.exitFullscreen) {
-if (document.fullscreenElement) document.exitFullscreen();
-} else if (document.webkitExitFullscreen) {
-document.webkitExitFullscreen();
-}
-} catch (e) {
-console.log("Exit fullscreen error:", e);
-}
+    try {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) return;
+        const p = document.exitFullscreen ? document.exitFullscreen() : (document.webkitExitFullscreen ? document.webkitExitFullscreen() : null);
+        if (p && typeof p.catch === 'function') {
+            p.catch(() => {});
+        }
+    } catch (e) {}
 }
 function checkAndTriggerFullscreenOnLogin() {
 const isFsOn = localStorage.getItem(getFullscreenSettingKey()) === 'true';
@@ -4610,6 +4670,7 @@ async function pullGacha(count) {
         results.push(item);
         if (item.rarityNum > maxRarity) maxRarity = item.rarityNum;
     }
+saveGachaResultsToAlbum(results);
 
     // 📷 獲得した画像をすべてアルバムへ自動保存
     if (typeof saveGachaResultsToAlbum === 'function') {
@@ -4676,21 +4737,26 @@ function rollSingleGacha(type) {
     };
 }
 
-// 📳 振動パターン
-function triggerGachaVibration(maxRarity, isUpgrade) {
-    if (!("vibrate" in navigator)) return;
+// 📳 指定秒数通りの連続振動パターン（ミリ秒指定・途切れなし）
+function getVibrationDurationMs(maxRarity, isUpgrade) {
     if (isUpgrade) {
-        navigator.vibrate([100, 60, 100, 60, 350, 100, 550]);
-    } else if (maxRarity === 6) {
-        navigator.vibrate([200, 100, 200, 100, 600]);
-    } else if (maxRarity === 5) {
-        navigator.vibrate([150, 80, 150]);
-    } else {
-        navigator.vibrate(80);
+        // 昇格時: ★4→★5は 7秒(7000ms)、★4→★6は 9秒(9000ms)
+        return (maxRarity === 6) ? 9000 : 7000;
     }
+    if (maxRarity === 6) return 8000; // ★6: 8秒
+    if (maxRarity === 5) return 5000; // ★5: 5秒
+    if (maxRarity === 4) return 3000; // ★4: 3秒
+    return 1000;                      // ★2・3: 1秒
 }
 
-// 🎬 演出モーダル表示（引き寄せ中なし・10連合体・5色玉・★4炎昇格）
+function triggerGachaVibration(maxRarity, isUpgrade) {
+    if (!("vibrate" in navigator)) return;
+    const totalMs = getVibrationDurationMs(maxRarity, isUpgrade);
+    // 途切れのない連続振動を実行
+    navigator.vibrate(totalMs);
+}
+
+// 🎬 演出モーダル表示（指定秒数の連続振動 ＆ 昇格タイミング完全同期）
 function playGachaAnimation(results, maxRarity, isUpgrade, count) {
     return new Promise((resolve) => {
         let animOverlay = document.getElementById('gacha-anim-overlay');
@@ -4708,87 +4774,289 @@ function playGachaAnimation(results, maxRarity, isUpgrade, count) {
         animOverlay.style.display = 'flex';
         animOverlay.style.background = '#000';
 
-        // 昇格演出がある場合は初期段階を必ず「★4（赤）」にする
         const initialRarity = isUpgrade ? 4 : maxRarity;
 
-        // メインの1個の玉を表示して昇格・結果へ進む処理
         const showMainOrbSequence = () => {
+            // 玉が出現した瞬間に連続振動スタート
+            triggerGachaVibration(maxRarity, isUpgrade);
+
             animOverlay.innerHTML = `
-                <div id="main-gacha-orb" class="gacha-orb orb-r${initialRarity}" style="width: 140px; height: 140px; transform: scale(0.6); opacity: 0;">
+                <div id="main-gacha-orb" class="gacha-orb orb-r${initialRarity} orb-shaking" style="width: 140px; height: 140px; transform: scale(1.15); opacity: 1;">
                     <div id="orb-fire-layer" class="orb-fire-aura" style="display: none;"></div>
                 </div>
             `;
-
             const mainOrb = document.getElementById('main-gacha-orb');
-            requestAnimationFrame(() => {
-                if (mainOrb) {
-                    mainOrb.style.transform = 'scale(1.15)';
-                    mainOrb.style.opacity = '1';
-                }
-            });
 
-            // 1.1秒後に昇格判定またはリザルトへ
-            setTimeout(() => {
-                if (isUpgrade && mainOrb) {
-                    // 🔥 ★4(赤)から炎が発生して★5(金)または★6(虹)へ昇格！
-                    const fireLayer = document.getElementById('orb-fire-layer');
-                    if (fireLayer) fireLayer.style.display = 'block';
-                    if ("vibrate" in navigator) navigator.vibrate([80, 40, 80, 40, 450]);
-
-                    mainOrb.style.transform = 'scale(1.35)';
-
+            if (isUpgrade) {
+                // ★4の3秒振動後、炎を纏って昇格（★5なら残り4秒=計7秒、★6なら残り6秒=計9秒）
+                const afterUpgradeMs = (maxRarity === 6) ? 6000 : 4000;
+                setTimeout(() => {
+                    if (mainOrb) {
+                        const fireLayer = document.getElementById('orb-fire-layer');
+                        if (fireLayer) fireLayer.style.display = 'block';
+                        mainOrb.className = `gacha-orb orb-r${maxRarity} orb-shaking`;
+                    }
                     setTimeout(() => {
-                        mainOrb.className = `gacha-orb orb-r${maxRarity}`;
-                        mainOrb.style.transform = 'scale(1.5)';
-                        setTimeout(() => {
-                            showGachaResultModal(results, count, resolve);
-                        }, 1100);
-                    }, 900);
-                } else {
-                    setTimeout(() => {
+                        if (mainOrb) mainOrb.classList.remove('orb-shaking');
                         showGachaResultModal(results, count, resolve);
-                    }, 600);
-                }
-            }, 1100);
+                    }, afterUpgradeMs);
+                }, 3000);
+            } else {
+                // 通常時: ★2・3(1秒) / ★4(3秒) / ★5(5秒) / ★6(8秒)
+                const waitMs = getVibrationDurationMs(maxRarity, false);
+                setTimeout(() => {
+                    if (mainOrb) mainOrb.classList.remove('orb-shaking');
+                    showGachaResultModal(results, count, resolve);
+                }, waitMs);
+            }
         };
 
         if (count === 10) {
-            // 🌟 10連演出：10個の玉が周囲に現れ、中央に集まって1つに合体する
             let miniOrbsHtml = '';
             const radius = 135;
             for (let i = 0; i < 10; i++) {
                 const angle = (i / 10) * Math.PI * 2;
                 const x = Math.round(Math.cos(angle) * radius);
                 const y = Math.round(Math.sin(angle) * radius);
-                // 各玉の色は引いた結果のレアリティ色にする
                 const rNum = results[i] ? results[i].rarityNum : 2;
                 miniOrbsHtml += `
-                    <div class="mini-gacha-orb orb-rrNum"id="mini-orb-{i}"
+                    <div class="mini-gacha-orb orb-r${rNum}" id="mini-orb-${i}"
                          style="transform: translate(${x}px, ${y}px) scale(1); opacity: 1;">
                     </div>
                 `;
             }
             animOverlay.innerHTML = `<div style="position:relative; width:320px; height:320px;">${miniOrbsHtml}</div>`;
 
-            // 0.35秒後に10個すべての玉が中心 (0, 0) へ収束
             setTimeout(() => {
                 for (let i = 0; i < 10; i++) {
                     const mOrb = document.getElementById(`mini-orb-${i}`);
-                    if (mOrb) {
-                        mOrb.style.transform = 'translate(0px, 0px) scale(0.4)';
-                    }
+                    if (mOrb) mOrb.style.transform = 'translate(0px, 0px) scale(0.4)';
                 }
             }, 350);
 
-            // 収束完了後（0.35s + 0.85s = 1.2s後）に1つの大きな玉に合体！
             setTimeout(() => {
                 showMainOrbSequence();
             }, 1200);
         } else {
-            // 単発は最初から1個の玉を表示
             showMainOrbSequence();
         }
     });
+}
+// 🎊 ガチャリザルト画面の表示（設定画像表示 ＆「もう一回引く」ボタン）
+function showGachaResultModal(results, count, resolve) {
+    let animOverlay = document.getElementById('gacha-anim-overlay');
+    if (!animOverlay) return;
+
+    const costSingle = Number(currentGachaConfig.costSingle) || 300;
+    const costMulti = Number(currentGachaConfig.costMulti) || 3000;
+    const retryCost = (count === 10) ? costMulti : costSingle;
+    const retryLabel = (count === 10) ? "もう10回引く" : "もう1回引く";
+
+    let cardsHtml = '';
+    if (count === 1) {
+        // 単発：画面中央に大きく1枚表示
+        const item = results[0];
+        const borderCol = getRarityBorderColor(item.rarityNum);
+        const textCol = getRarityTextColor(item.rarityNum);
+        cardsHtml = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; max-width:280px; margin: 0 auto;">
+                <div style="width:100%; aspect-ratio: 3/4; max-height: 52vh; border: 3px solid ${borderCol}; border-radius: 14px; overflow: hidden; box-shadow: 0 0 25px ${borderCol}; background: #111; position: relative;">
+                    <img src="${item.url}" alt="${item.name}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    <div style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.8); color:${textCol}; font-weight:800; font-size:1rem; padding:3px 10px; border-radius:8px; border:1px solid ${borderCol};">
+                        ${item.rarity}
+                    </div>
+                </div>
+                <div style="margin-top:10px; font-size:1rem; font-weight:bold; color:#fff; text-align:center;">${item.name}</div>
+            </div>
+        `;
+    } else {
+        // 10連：2列×5行のグリッドで画像がしっかり見えるサイズで表示
+        cardsHtml = `<div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 420px; margin: 0 auto;">`;
+        results.forEach(item => {
+            const borderCol = getRarityBorderColor(item.rarityNum);
+            const textCol = getRarityTextColor(item.rarityNum);
+            cardsHtml += `
+                <div style="background:#181818; border: 2px solid ${borderCol}; border-radius: 10px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.8); display:flex; flex-direction:column;">
+                    <div style="width:100%; height: 120px; position:relative; background:#000;">
+                        <img src="${item.url}" alt="${item.name}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                        <span style="position:absolute; top:4px; left:4px; background:rgba(0,0,0,0.85); color:${textCol}; font-weight:800; font-size:0.75rem; padding:1px 6px; border-radius:4px; border:1px solid ${borderCol};">
+                            ${item.rarity}
+                        </span>
+                    </div>
+                    <div style="padding:5px 6px; font-size:0.72rem; color:#eee; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center;">
+                        ${item.name}
+                    </div>
+                </div>
+            `;
+        });
+        cardsHtml += `</div>`;
+    }
+
+    const userGem = currentUser ? Number(currentUser.gem || 0).toLocaleString() : "0";
+
+    animOverlay.style.background = 'rgba(5, 5, 5, 0.96)';
+    animOverlay.innerHTML = `
+        <div style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding: 16px 14px 24px 14px; box-sizing:border-box;">
+            <!-- 上部ヘッダー（リザルトタイトル ＆ 所持ダイヤ） -->
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0; margin-bottom:10px;">
+                <span style="color:#00f5d4; font-weight:800; font-size:1.1rem;">✨ ガチャ結果</span>
+                <span style="background:rgba(0,0,0,0.7); border:1px solid #00f5d4; color:#00f5d4; padding:4px 10px; border-radius:16px; font-size:0.85rem; font-weight:bold;">
+                    💎 ${userGem}
+                </span>
+            </div>
+
+            <!-- 中央：獲得画像一覧（スクロール対応） -->
+            <div style="flex:1; overflow-y:auto; display:flex; align-items:${count === 1 ? 'center' : 'flex-start'}; justify-content:center; padding: 4px 0;">
+                ${cardsHtml}
+            </div>
+
+            <!-- 下部：閉じる ＆ もう一回引くボタン -->
+            <div style="display:flex; gap:10px; flex-shrink:0; margin-top:12px; width:100%; max-width:420px; margin-left:auto; margin-right:auto;">
+                <button onclick="closeGachaResultModal()" style="flex:1; background:#333; color:#fff; border:1px solid #666; border-radius:10px; padding:12px 8px; font-size:0.95rem; font-weight:bold; cursor:pointer; font-family:inherit;">
+                    閉じる
+                </button>
+                <button onclick="retryGachaFromResult(${count})" style="flex:1.4; background:linear-gradient(135deg, #ffee00, #ff9900); color:#000; border:1px solid #fff; border-radius:10px; padding:10px 8px; cursor:pointer; font-family:inherit; box-shadow:0 4px 12px rgba(255,153,0,0.4);">
+                    <div style="font-size:0.95rem; font-weight:800;">${retryLabel}</div>
+                    <div style="font-size:0.75rem; font-weight:bold; color:#111;">💎 ${retryCost.toLocaleString()}</div>
+                </button>
+            </div>
+        </div>
+    `;
+
+    if (resolve) resolve();
+}
+
+function closeGachaResultModal() {
+    const animOverlay = document.getElementById('gacha-anim-overlay');
+    if (animOverlay) {
+        animOverlay.style.display = 'none';
+        animOverlay.innerHTML = '';
+    }
+    renderGachaScreen();
+}
+
+function retryGachaFromResult(count) {
+    pullGacha(count);
+}
+
+// 📷 ガチャ結果をマイアルバム＆スライドショーへ自動保存する関数
+function saveGachaResultsToAlbum(results) {
+    if (!Array.isArray(results) || results.length === 0) return;
+
+    let addedCount = 0;
+    results.forEach((item, idx) => {
+        if (!item || !item.url || item.url === "undefined") return;
+
+        // すでに同じURLがアルバムにある場合は重複追加しない
+        if (!userAlbum.some(existing => existing.url === item.url)) {
+            const newId = 'gacha_album_' + Date.now() + '_' + idx;
+            userAlbum.push({
+                id: newId,
+                name: item.name || `${item.rarity} イラスト`,
+                url: item.url
+            });
+
+            // スライドショーが7枚未満なら自動でスライドショーにも登録
+            if (userSlideshowIds.length < 7 && !userSlideshowIds.includes(newId)) {
+                userSlideshowIds.push(newId);
+            }
+            addedCount++;
+        }
+    });
+
+    if (addedCount > 0) {
+        saveUserAlbumData();
+        renderAlbum();
+        initSlideshow();
+        populateSettingsAvatarSelect();
+        checkExclamationMarks();
+    }
+}
+
+
+// 🖼️ アルバム画像の全体拡大表示 ＆ ダウンロードモーダル
+function openAlbumImageViewer(url, name, rarity, rarityNum) {
+    let viewer = document.getElementById('album-image-viewer');
+    if (!viewer) {
+        viewer = document.createElement('div');
+        viewer.id = 'album-image-viewer';
+        viewer.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); z-index: 100000;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 16px 14px 28px 14px; box-sizing: border-box;
+        `;
+        document.body.appendChild(viewer);
+    }
+
+    const borderCol = getRarityBorderColor(Number(rarityNum) || 2);
+    const textCol = getRarityTextColor(Number(rarityNum) || 2);
+    const safeName = (name || 'gacha_image').replace(/[\\/:*?"<>|]/g, '_');
+
+    viewer.style.display = 'flex';
+    viewer.innerHTML = `
+        <!-- 上部：レアリティ＆画像名＆閉じるボタン -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                <span style="background:rgba(0,0,0,0.8); color:${textCol}; border:1px solid ${borderCol}; padding:2px 8px; border-radius:6px; font-weight:800; font-size:0.85rem; flex-shrink:0;">
+                    ${rarity}
+                </span>
+                <span style="color:#fff; font-weight:bold; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    ${name}
+                </span>
+            </div>
+            <button onclick="closeAlbumImageViewer()" style="background:#333; color:#fff; border:1px solid #666; border-radius:8px; padding:6px 12px; font-size:0.85rem; font-weight:bold; cursor:pointer; flex-shrink:0;">
+                ✕ 閉じる
+            </button>
+        </div>
+
+        <!-- 中央：見切れなしで画像全体を表示（object-fit: contain） -->
+        <div onclick="closeAlbumImageViewer()" style="flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; margin:12px 0;">
+            <img src="${url}" alt="${name}" onclick="event.stopPropagation()" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:10px; border:2px solid ${borderCol}; box-shadow:0 0 25px rgba(0,0,0,0.9);">
+        </div>
+
+        <!-- 下部：画像ダウンロードボタン -->
+        <div style="display:flex; justify-content:center; flex-shrink:0;">
+            <button onclick="downloadAlbumImage('${url}', '${safeName}')" style="width:100%; max-width:340px; background:linear-gradient(135deg, #00f5d4, #00bbf9); color:#000; border:none; border-radius:10px; padding:13px 16px; font-size:1rem; font-weight:800; cursor:pointer; box-shadow:0 4px 15px rgba(0,245,212,0.4);">
+                📥 画像をダウンロード保存
+            </button>
+        </div>
+    `;
+}
+
+function closeAlbumImageViewer() {
+    const viewer = document.getElementById('album-image-viewer');
+    if (viewer) {
+        viewer.style.display = 'none';
+        viewer.innerHTML = '';
+    }
+}
+
+// 📥 画像ダウンロード処理（外部URL・DataURL両対応）
+async function downloadAlbumImage(url, filename) {
+    try {
+        // fetchでBlob化してダウンロード（別ドメイン画像でも保存ダイアログを出しやすくする）
+        const response = await fetch(url, { mode: 'cors' });
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename + '.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+    } catch (e) {
+        // CORS制限等でBlob化できない場合は直接リンクで開く/保存
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename + '.png';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
 }
 
 // レアリティに応じた枠線・文字色の取得ヘルパー（★2白 / ★3緑 / ★4赤 / ★5金 / ★6虹）
@@ -5000,12 +5268,12 @@ initSlideshow();
 window.addEventListener('DOMContentLoaded', () => { 
     reloadUserData(); 
     fetchDriveMasterData(); 
-    initTitleSlideshow(); // ← 削除または行ごと消
-const savedColor = localStorage.getItem('nexus_clock_color');
-if (savedColor) {
-applyClockColorToAll(savedColor);
-}
-initBattery();
+    initTitleSlideshow();
+    const savedColor = localStorage.getItem('nexus_clock_color');
+    if (savedColor) {
+        applyClockColorToAll(savedColor);
+    }
+    initBattery();
 });
 function updateClock() {
 const now = new Date();
@@ -5116,10 +5384,11 @@ let openedFromTitle = false;
 // 🔲 指定したサブ画面を閉じる関数
 function closeScreen(name) {
     const target = document.getElementById('screen-' + name);
-  if (target) target.classList.add('active');
-  if (name === 'settings') {
-    updateUIUserStatus();
-  }
+    if (target) target.classList.remove('active');
+    if (openedFromTitle) {
+ document.getElementById('title-screen').classList.remove('hidden');
+        openedFromTitle = false;
+    }
 }
 
 function openScreen(name, fromTitle = false) {
@@ -5137,10 +5406,10 @@ function openScreen(name, fromTitle = false) {
   if (audioEl) {
       if (name === 'play') {
           audioEl.pause();
-      } else if (!audioEl.paused === false && !isBgmUserPaused && currentUser) {
+           } else if (audioEl.paused && !isBgmUserPaused && currentUser) {
           audioEl.play().catch(() => {});
       }
-  }
+}
   const bottomNav = document.getElementById('main-bottom-nav');
   if (bottomNav) {
     bottomNav.classList.remove('hide-menu');
@@ -5175,24 +5444,11 @@ function openScreen(name, fromTitle = false) {
   if (name !== 'home' && document.getElementById('nav-' + name)) {
     document.getElementById('nav-' + name).classList.add('active');
   }
-  const target = document.getElementById('screen-' + name);
+   const target = document.getElementById('screen-' + name);
   if (target) target.classList.add('active');
-
-  // 🔄 下メニューから画面を開いた時にクラウド同期（右下にグルグル表示）
-  if (currentUser && !fromTitle && name !== 'manage') {
-      syncDataToGas("navSync");
+  if (name === 'settings') {
+    updateUIUserStatus();
   }
-}
-
-
-function switchNav(name) {
-closeOtherMenu();
-closeAllSelectors();
-const bottomNav = document.getElementById('main-bottom-nav');
-if (bottomNav) bottomNav.classList.remove('hide-menu');
-document.querySelectorAll('.sub-screen').forEach(s => s.classList.remove('active'));
-document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-if (name === 'home') document.getElementById('nav-home').classList.add('active');
 }
 function adjustVolume(val) {
     const vol = val / 100;
@@ -5435,26 +5691,6 @@ function playDefaultSongOnLogin() {
     localStorage.setItem('nexus_bgm_index', 0);
     playBgmByIndex(0, true);
 }
-// 1. ガチャ排出率モーダルの開閉
-function toggleGachaRateModal() {
-    const modal = document.getElementById('gacha-rate-popup-modal');
-    if (!modal) return;
-    modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
-}
-
-// 2. 管理画面のGAS同期データ表示
-function renderAdminGasDataView() {
-    const container = document.getElementById('admin-gas-fetched-data-container');
-    if (!container) return;
-    container.innerHTML = `
-        <div style="color:#00f5d4; font-weight:bold; margin-bottom:4px;">🖼️ ドライブ画像: ${masterDriveImages.length}件</div>
-        <div style="color:#ffee00; font-weight:bold; margin-bottom:6px;">🎵 YouTube楽曲: ${dynamicSongsList.length}件</div>
-        <div style="font-size:0.75rem; color:#ccc;">
-            ${masterDriveImages.map(img => `・${img.name}`).join('<br>') || '画像データなし'}
-        </div>
-    `;
-}
-
 
 // ==========================================================
 // 🛠️ 修正・追加分: 全画面の閉じる処理 & 管理画面の保存処理
@@ -5492,5 +5728,4 @@ setTimeout(initDynamicPlaylist, 500);
 </script>
 </body>
 </html>
-
 
