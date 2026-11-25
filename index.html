@@ -5263,15 +5263,6 @@ function updateClock() {
       if (el) el.textContent = timeStr;
       const gel = document.getElementById('gacha-live-clock');
       if (gel) gel.textContent = timeStr;
-    }
-
-const rClock = document.getElementById('real-clock');
-if (rClock) rClock.innerText = timeStr;
-const titleClock = document.getElementById('title-clock');
-if (titleClock) titleClock.innerText = timeStr;
-const eventClock = document.getElementById('event-clock');
-if (eventClock) eventClock.innerText = timeStr;
-checkAndUpdateAutomaticStatus();
 }
 setInterval(updateClock, 1000);
 updateClock();
